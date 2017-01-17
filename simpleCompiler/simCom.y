@@ -6,7 +6,7 @@
 	int *var[26];
 %}
 
-%token NUM ID READ WRITE ASGN NEWLINE IF THEN ELSE ENDIF WHILE DO ENDWHILE LT GT EQ
+%token NUM ID READ WRITE ASGN NEWLINE IF THEN ELSE ENDIF WHILE DO ENDWHILE LT GT EQ BREAK
 %nonassoc LT GT EQ
 %left PLUS
 %left MUL 
@@ -51,6 +51,9 @@ stmt 	: ID ASGN expr ';'	{
 				{
 				  $$ = TreeCreate(VOID, WHILE, NULL, 0, NULL, $3, $6, NULL);
 				}
+	| BREAK ';'		{
+				  $$ = TreeCreate(VOID, BREAK, NULL, 0, NULL, NULL, NULL, NULL);
+				}
      	;
 
 
@@ -63,8 +66,9 @@ int yyerror(char const *s)
 	printf("yyerror %s", s);
 }
 
-int main()
+int main(int argc, char** argv)
 {
+	yyin = fopen(argv[1], "r");
 	yyparse();
 	return 1;
 }

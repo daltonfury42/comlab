@@ -101,11 +101,18 @@ int evaluate(struct Tnode *t){
 			break;
 		case WHILE:
 			while(evaluate(t->left))
-				evaluate(t->right);
+				int res;
+				if( == BREAK)
+					break;
+				els
 			return VOID;
 			break;
-			
-
+		case BREAK:
+			return BREAK;
+			break;
+		case CONTINUE:
+			return CONTINUE;
+			break;
 		default:
 			printf("Oops!");
 			exit(0);	
