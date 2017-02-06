@@ -3,15 +3,16 @@
 	#include "exptree.h"
 	#include <stdlib.h>
 	#include <stdio.h>	
+	extern FILE* yyin;
 	int *var[26];
 %}
 
-%token NUM ID READ WRITE ASGN NEWLINE IF THEN ELSE ENDIF WHILE DO ENDWHILE LT GT EQ BREAK
+%token NUM ID READ WRITE ASGN NEWLINE IF THEN ELSE ENDIF WHILE DO ENDWHILE LT GT EQ BEGN END BREAK CONTINUE
 %nonassoc LT GT EQ
 %left PLUS
 %left MUL 
 %%
-Program : slist NEWLINE { evaluate($1); exit(0);}
+Program : BEGN slist END 	{ evaluate($2); exit(0); }
 	     ;
 slist 	: slist stmt		{
       				  $$ = TreeCreate(VOID, STATEMENT, NULL, 0, NULL, $1, $2, NULL);
@@ -53,6 +54,9 @@ stmt 	: ID ASGN expr ';'	{
 				}
 	| BREAK ';'		{
 				  $$ = TreeCreate(VOID, BREAK, NULL, 0, NULL, NULL, NULL, NULL);
+				}
+	| CONTINUE ';'		{
+				  $$ = TreeCreate(VOID, CONTINUE, NULL, 0, NULL, NULL, NULL, NULL);
 				}
      	;
 

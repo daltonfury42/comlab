@@ -7,6 +7,8 @@
 
 %%
 
+"begin"		{ return BEGN; }
+"end"		{ return END; }
 "read" 		{ return READ; }
 "write"		{ return WRITE; }
 "if" 		{ return IF; }
@@ -20,7 +22,8 @@
 "continue"	{ return CONTINUE; }
 [a-z] 		{ 	char * varName = malloc(sizeof(char));
 			*varName = *yytext;
-			yylval = TreeCreate(VOID, ID, varName, 0, NULL, NULL, NULL, NULL); return ID; 
+			yylval = TreeCreate(VOID, ID, varName, 0, NULL, NULL, NULL, NULL); 
+			return ID;
 		}
 [0-9]+		{ yylval = makeIntegerLeafNode(atoi(yytext)); return NUM; }
 [=]		{ return ASGN; }
@@ -29,8 +32,7 @@
 "=="		{ return EQ; }
 "<"		{ return LT; }
 ">"		{ return GT; }
-[ \t] 		{}
-[\n]		{ return NEWLINE; }
+[ \t\n]		{}
 .		{ return *yytext; }
 %%
 

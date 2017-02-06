@@ -40,6 +40,7 @@ struct Tnode *TreeCreate(int TYPE, int NODETYPE, char* NAME, int VALUE, struct T
 }
 
 int evaluate(struct Tnode *t){
+	int ret;
     if(t->NODETYPE == NUM){
         return t->VALUE;
     }
@@ -61,9 +62,12 @@ int evaluate(struct Tnode *t){
 		      	return evaluate(t->left) > evaluate(t->right);
                       	break;
 	    	case STATEMENT:
-		      	evaluate(t->left);
-		      	evaluate(t->right);
-		      	return VOID;
+			ret = evaluate(t->left);
+			if (ret == BREAK)
+				return BREAK;
+			else if (ret == CONTINUE)
+				return CONTINUE;
+		      	return evaluate(t->right);
 		      	break;
 	    	case READ:
 		      	if(var[*(t->NAME) - 'a'] == NULL)
@@ -101,18 +105,21 @@ int evaluate(struct Tnode *t){
 			break;
 		case WHILE:
 			while(evaluate(t->left))
-				int res;
-				if( == BREAK)
+			{
+				ret = evaluate(t->right);
+				if(ret == BREAK)
 					break;
-				els
+				else if (ret == CONTINUE)
+					continue;
+			}
 			return VOID;
 			break;
 		case BREAK:
 			return BREAK;
-			break;
+			break;		
 		case CONTINUE:
 			return CONTINUE;
-			break;
+			break;		
 		default:
 			printf("Oops!");
 			exit(0);	
