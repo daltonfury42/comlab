@@ -7,6 +7,8 @@
 
 %%
 
+"begin"		{ return BEGN; }
+"end"		{ return END; }
 "read" 		{ return READ; }
 "write"		{ return WRITE; }
 "if" 		{ return IF; }
@@ -27,8 +29,7 @@
 "=="		{ return EQ; }
 "<"		{ return LT; }
 ">"		{ return GT; }
-[ \t] 		{}
-[\n]		{ return NEWLINE; }
+[ \t\n]		{}
 .		{ return *yytext; }
 %%
 
