@@ -18,9 +18,12 @@
 "while" 	{ return WHILE; }
 "do" 		{ return DO; }
 "endwhile" 	{ return ENDWHILE; }
+"break"		{ return BREAK; }
+"continue"	{ return CONTINUE; }
 [a-z] 		{ 	char * varName = malloc(sizeof(char));
 			*varName = *yytext;
-			yylval = TreeCreate(VOID, ID, varName, 0, NULL, NULL, NULL, NULL); return ID; 
+			yylval = TreeCreate(VOID, ID, varName, 0, NULL, NULL, NULL, NULL); 
+			return ID;
 		}
 [0-9]+		{ yylval = makeIntegerLeafNode(atoi(yytext)); return NUM; }
 [=]		{ return ASGN; }

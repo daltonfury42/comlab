@@ -7,7 +7,7 @@
 	int *var[26];
 %}
 
-%token NUM ID READ WRITE ASGN NEWLINE IF THEN ELSE ENDIF WHILE DO ENDWHILE LT GT EQ BEGN END
+%token NUM ID READ WRITE ASGN NEWLINE IF THEN ELSE ENDIF WHILE DO ENDWHILE LT GT EQ BEGN END BREAK CONTINUE
 %nonassoc LT GT EQ
 %left PLUS
 %left MUL 
@@ -51,6 +51,12 @@ stmt 	: ID ASGN expr ';'	{
 	| WHILE '(' expr ')' DO slist ENDWHILE ';'
 				{
 				  $$ = TreeCreate(VOID, WHILE, NULL, 0, NULL, $3, $6, NULL);
+				}
+	| BREAK ';'		{
+				  $$ = TreeCreate(VOID, BREAK, NULL, 0, NULL, NULL, NULL, NULL);
+				}
+	| CONTINUE ';'		{
+				  $$ = TreeCreate(VOID, CONTINUE, NULL, 0, NULL, NULL, NULL, NULL);
 				}
      	;
 
