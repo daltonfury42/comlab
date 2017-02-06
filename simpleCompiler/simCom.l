@@ -2,7 +2,10 @@
 	#define YYSTYPE struct Tnode*
 	#include "exptree.h"
 	#include "y.tab.h"
+	#include "symbolTable.h"
 	#include <stdlib.h>
+
+	struct Gsymbol * GST = NULL;
 %}
 
 %%
@@ -20,9 +23,10 @@
 "endwhile" 	{ return ENDWHILE; }
 "break"		{ return BREAK; }
 "continue"	{ return CONTINUE; }
-[a-z] 		{ 	char * varName = malloc(sizeof(char));
-			*varName = *yytext;
+[a-zA-Z_][a-zA-Z_0-9]*		{ 	char * varName = malloc(sizeof(char)*strlen(yytext)+1);
+			strcpy(varName, yytext);
 			yylval = TreeCreate(VOID, ID, varName, 0, NULL, NULL, NULL, NULL); 
+			Ginstall(varName, NUM, sizeof(int));
 			return ID;
 		}
 [0-9]+		{ yylval = makeIntegerLeafNode(atoi(yytext)); return NUM; }

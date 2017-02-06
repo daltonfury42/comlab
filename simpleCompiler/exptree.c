@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "exptree.h"
+#include "symbolTable.h"
 
 extern int* var[26];
 
@@ -80,19 +81,20 @@ int evaluate(struct Tnode *t){
 			return VOID;
 			break;
 		case ID:
-			if(var[*(t->NAME) - 'a'] == NULL)
+			if(Glookup(t->NAME)  == NULL)
 			{
 				printf("Unallocated variable");
 				exit(0);
 			}
-			return *var[*(t->NAME) - 'a'];
+			return *(Glookup(t->NAME) -> BINDING);
 			break;
 		case ASGN:
-			if(var[*(t->NAME) - 'a'] == NULL)
+			if(Glookup(t->NAME)  == NULL)
 			{
-			      var[*(t->NAME) - 'a'] = malloc(sizeof(int));
+				printf("Unallocated variable");
+				exit(0);
 			}
-			*var[*(t->NAME) - 'a'] = evaluate(t->left);
+			*(Glookup(t->NAME) -> BINDING) = evaluate(t->left);
 			return VOID;
 			break;
 		case IF:
