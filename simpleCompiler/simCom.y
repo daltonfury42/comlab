@@ -1,18 +1,33 @@
 %{
 	#define YYSTYPE struct Tnode*
 	#include "exptree.h"
+	#include "symbolTable.h"
 	#include <stdlib.h>
 	#include <stdio.h>	
 	extern FILE* yyin;
-	int *var[26];
 %}
 
-%token NUM ID READ WRITE ASGN NEWLINE IF THEN ELSE ENDIF WHILE DO ENDWHILE LT GT EQ BEGN END BREAK CONTINUE
+%token NUM ID READ WRITE ASGN NEWLINE IF THEN ELSE ENDIF WHILE DO ENDWHILE LT GT EQ BEGN END BREAK CONTINUE INT DECL ENDDECL
 %nonassoc LT GT EQ
 %left PLUS
 %left MUL 
 %%
-Program : BEGN slist END 	{ evaluate($2); exit(0); }
+Program		: globalDecl mainBody	{}
+	 	| mainBody 		{}
+		;
+
+globalDecl	: DECL declList ENDDECL	{}
+
+
+declList	: decl declList		{}
+	 	| decl			{}
+		;
+
+decl 		: INT ID ';'		{
+       					  Ginstall($2->NAME, NUM, sizeof(int));
+					}
+
+mainBody : BEGN slist END 	{ evaluate($2); exit(0); }
 	     ;
 slist 	: slist stmt		{
       				  $$ = TreeCreate(VOID, STATEMENT, NULL, 0, NULL, $1, $2, NULL);

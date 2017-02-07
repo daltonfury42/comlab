@@ -10,6 +10,9 @@
 
 %%
 
+"int" 		{ return INT; }
+"decl"		{ return DECL; }
+"enddecl"	{ return ENDDECL; }
 "begin"		{ return BEGN; }
 "end"		{ return END; }
 "read" 		{ return READ; }
@@ -23,10 +26,9 @@
 "endwhile" 	{ return ENDWHILE; }
 "break"		{ return BREAK; }
 "continue"	{ return CONTINUE; }
-[a-zA-Z_][a-zA-Z_0-9]*		{ 	char * varName = malloc(sizeof(char)*strlen(yytext)+1);
+[a-zA-Z_][a-zA-Z_0-9]*	{ 	char * varName = malloc(sizeof(char)*strlen(yytext)+1);
 			strcpy(varName, yytext);
 			yylval = TreeCreate(VOID, ID, varName, 0, NULL, NULL, NULL, NULL); 
-			Ginstall(varName, NUM, sizeof(int));
 			return ID;
 		}
 [0-9]+		{ yylval = makeIntegerLeafNode(atoi(yytext)); return NUM; }

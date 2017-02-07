@@ -71,9 +71,13 @@ int evaluate(struct Tnode *t){
 		      	return evaluate(t->right);
 		      	break;
 	    	case READ:
-		      	if(var[*(t->NAME) - 'a'] == NULL)
-			      var[*(t->NAME) - 'a'] = malloc(sizeof(int));
-			scanf("%d", var[*(t->NAME) - 'a']);
+			if(Glookup(t->NAME)  == NULL)
+			{
+				printf("Unallocated variable");
+				exit(0);
+			}
+			
+			scanf("%d", (Glookup(t->NAME) -> BINDING));
 			return VOID;
 			break;
 		case WRITE:
