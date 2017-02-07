@@ -2,24 +2,25 @@
 #include <stdio.h>
 #include "exptree.h"
 #include "symbolTable.h"
+#include "constants.h"
 
 extern int* var[26];
 
-struct Tnode* makeIntegerLeafNode(int n){
+struct Tnode* makeLeafNode(int n, int TYPE){
     struct Tnode *temp;
     temp = (struct Tnode*)malloc(sizeof(struct Tnode));
     bzero(temp, sizeof(struct Tnode));
-    temp->TYPE= NUM;
-    temp->NODETYPE = NUM;
+    temp->TYPE= TYPE;
+    temp->NODETYPE = CONSTANT;
     temp->VALUE = n;
     return temp;
 }
 
-struct Tnode* makeBinaryOperatorNode(int op, struct Tnode *l, struct Tnode *r){
+struct Tnode* makeBinaryOperatorNode(int op, struct Tnode *l, struct Tnode *r, int TYPE){
     struct Tnode *temp;
     temp = (struct Tnode*)malloc(sizeof(struct Tnode));
     bzero(temp, sizeof(struct Tnode));
-    temp->TYPE = NUM;
+    temp->TYPE = TYPE;
     temp->NODETYPE = op;
     temp->left= l;
     temp->right = r;
@@ -40,9 +41,25 @@ struct Tnode *TreeCreate(int TYPE, int NODETYPE, char* NAME, int VALUE, struct T
     temp->middle = middle;	
 }
 
+int LTOA(int l)
+{
+	if(l == TRUE)
+		return 1;
+	else if(l == FALSE)
+		return 0;
+}
+
+int ATOL(int a)
+{
+	if(a == 0)
+		return FALSE;
+
+	return TRUE;
+}
+
 int evaluate(struct Tnode *t){
 	int ret;
-    if(t->NODETYPE == NUM){
+    if(t->NODETYPE == CONSTANT){
         return t->VALUE;
     }
     else{
@@ -54,13 +71,13 @@ int evaluate(struct Tnode *t){
 		      	return evaluate(t->left) * evaluate(t->right);
                       	break;
             	case EQ:
-		      	return evaluate(t->left) == evaluate(t->right);
+		      	return ATOL(evaluate(t->left) == evaluate(t->right));
                       	break;
             	case LT:
-		      	return evaluate(t->left) < evaluate(t->right);
+		      	return ATOL(evaluate(t->left) < evaluate(t->right));
                       	break;
             	case GT:
-		      	return evaluate(t->left) > evaluate(t->right);
+		      	return ATOL(evaluate(t->left) > evaluate(t->right));
                       	break;
 	    	case STATEMENT:
 			ret = evaluate(t->left);
@@ -73,7 +90,7 @@ int evaluate(struct Tnode *t){
 	    	case READ:
 			if(Glookup(t->NAME)  == NULL)
 			{
-				printf("Unallocated variable");
+				printf("Unallocated variable '%s'", t->NAME);
 				exit(0);
 			}
 			
@@ -87,7 +104,6 @@ int evaluate(struct Tnode *t){
 		case ID:
 			if(Glookup(t->NAME)  == NULL)
 			{
-				printf("Unallocated variable");
 				exit(0);
 			}
 			return *(Glookup(t->NAME) -> BINDING);
@@ -95,14 +111,14 @@ int evaluate(struct Tnode *t){
 		case ASGN:
 			if(Glookup(t->NAME)  == NULL)
 			{
-				printf("Unallocated variable");
+				printf("Unallocated variable '%s'", t->NAME);
 				exit(0);
 			}
 			*(Glookup(t->NAME) -> BINDING) = evaluate(t->left);
 			return VOID;
 			break;
 		case IF:
-			if(evaluate(t->left))
+			if(LTOA(evaluate(t->left)))
 				return evaluate(t->right);
 			else if(t->middle != NULL)
 				return evaluate(t->middle);
@@ -110,7 +126,7 @@ int evaluate(struct Tnode *t){
 				return VOID;
 			break;
 		case WHILE:
-			while(evaluate(t->left))
+			while(LTOA(evaluate(t->left)))
 			{
 				ret = evaluate(t->right);
 				if(ret == BREAK)

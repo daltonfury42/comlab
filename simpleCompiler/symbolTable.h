@@ -4,7 +4,7 @@ struct Gsymbol {
 
 	char *NAME; // Name of the Identifier
 
-	int TYPE; // TYPE can be INTEGER or BOOLEAN
+	int TYPE; // TYPE can be T_INT or T_BOOL
 
 	/***The TYPE field must be a TypeStruct if user defined types are allowed***/
 

@@ -1,7 +1,5 @@
 
 /* Constants */
-	#define VOID -1001
-	#define STATEMENT -1002
 	#include "y.tab.h"
 	#include <strings.h>
 	#include <stdlib.h>
@@ -42,10 +40,10 @@ struct Tnode {
 struct Tnode *TreeCreate(int TYPE, int NODETYPE, char* NAME, int VALUE, struct Tnode* ArgList, struct Tnode* left, struct Tnode* right, struct Tnode* middle);
 
 /*Make a leaf tnode and set the value of val field*/
-struct Tnode* makeIntegerLeafNode(int n);
+struct Tnode* makeLeafNode(int n, int TYPE);
 
 /*Make a tnode with opertor, left and right branches set*/
-struct Tnode* makeBinaryOperatorNode(int op, struct Tnode *l, struct Tnode *r);
+struct Tnode* makeBinaryOperatorNode(int op, struct Tnode *l, struct Tnode *r, int TYPE);
 
 /*To evaluate an expression tree*/
 int evaluate(struct Tnode *t);

@@ -3,6 +3,7 @@
 	#include "exptree.h"
 	#include "y.tab.h"
 	#include "symbolTable.h"
+	#include "constants.h"
 	#include <stdlib.h>
 
 	struct Gsymbol * GST = NULL;
@@ -10,7 +11,10 @@
 
 %%
 
-"int" 		{ return INT; }
+"integer" 		{ return INT; }
+"boolean"		{ return BOOL; }
+"TRUE"		{ yylval = makeLeafNode(TRUE, T_BOOL); return BOOLEAN; }
+"FALSE"		{ yylval = makeLeafNode(FALSE, T_BOOL); return BOOLEAN; }
 "decl"		{ return DECL; }
 "enddecl"	{ return ENDDECL; }
 "begin"		{ return BEGN; }
@@ -31,7 +35,7 @@
 			yylval = TreeCreate(VOID, ID, varName, 0, NULL, NULL, NULL, NULL); 
 			return ID;
 		}
-[0-9]+		{ yylval = makeIntegerLeafNode(atoi(yytext)); return NUM; }
+[0-9]+		{ yylval = makeLeafNode(atoi(yytext), T_INT); return NUM; }
 [=]		{ return ASGN; }
 "+"		{ return PLUS; }
 "*"		{ return MUL; }

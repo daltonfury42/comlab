@@ -1,4 +1,5 @@
 #include "symbolTable.h"
+#include "constants.h"
 #include "y.tab.h"
 #include <string.h>
 #include <stdlib.h>
@@ -42,10 +43,14 @@ void Ginstall(char* NAME, int TYPE, int SIZE)
 	i->TYPE = TYPE;
 	i->SIZE = SIZE;
 
-	if(TYPE == NUM)
+	if(TYPE == T_INT)
 		i->BINDING = malloc(sizeof(int));
-	else //handle for bool
+	else if (TYPE == T_BOOL)
 	{
-		printf("Yet to implement");
+		i->BINDING = malloc(sizeof(int));
+	}
+	else
+	{
+		printf("Unrecognised type");
 	}
 }

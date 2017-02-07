@@ -4,10 +4,18 @@
 	#include "symbolTable.h"
 	#include <stdlib.h>
 	#include <stdio.h>	
+	#include "constants.h"
 	extern FILE* yyin;
+
+	int yylex();
+	int yyerror(const char*);
 %}
 
-%token NUM ID READ WRITE ASGN NEWLINE IF THEN ELSE ENDIF WHILE DO ENDWHILE LT GT EQ BEGN END BREAK CONTINUE INT DECL ENDDECL
+
+%token ID READ WRITE ASGN NEWLINE IF THEN ELSE ENDIF WHILE DO ENDWHILE LT GT EQ BEGN END BREAK CONTINUE DECL ENDDECL 
+%token BOOL INT
+%token NUM BOOLEAN
+
 %nonassoc LT GT EQ
 %left PLUS
 %left MUL 
@@ -24,7 +32,10 @@ declList	: decl declList		{}
 		;
 
 decl 		: INT ID ';'		{
-       					  Ginstall($2->NAME, NUM, sizeof(int));
+       					  Ginstall($2->NAME, T_INT, sizeof(int));
+					}
+		| BOOL ID ';'		{
+       					  Ginstall($2->NAME, T_BOOL, sizeof(int));
 					}
 
 mainBody : BEGN slist END 	{ evaluate($2); exit(0); }
@@ -36,13 +47,14 @@ slist 	: slist stmt		{
      	;
 
 
-expr	: expr PLUS expr	{ $$ = makeBinaryOperatorNode(PLUS, $1, $3); }
-     	| expr MUL expr		{ $$ = makeBinaryOperatorNode(MUL, $1, $3); }
-     	| expr EQ expr		{ $$ = makeBinaryOperatorNode(EQ, $1, $3); }
-     	| expr LT expr		{ $$ = makeBinaryOperatorNode(LT, $1, $3); }
-     	| expr GT expr		{ $$ = makeBinaryOperatorNode(GT, $1, $3); }
+expr	: expr PLUS expr	{ $$ = makeBinaryOperatorNode(PLUS, $1, $3, T_INT); }
+     	| expr MUL expr		{ $$ = makeBinaryOperatorNode(MUL, $1, $3, T_INT); }
+     	| expr EQ expr		{ $$ = makeBinaryOperatorNode(EQ, $1, $3, T_BOOL); }
+     	| expr LT expr		{ $$ = makeBinaryOperatorNode(LT, $1, $3, T_BOOL); }
+     	| expr GT expr		{ $$ = makeBinaryOperatorNode(GT, $1, $3, T_BOOL); }
 	| '(' expr ')'		{ $$ = $2; }
 	| NUM			{ $$ = $1; }
+	| BOOLEAN 			{ $$ = $1; }
 	| ID			{
 				  $$ = $1;
 				}
