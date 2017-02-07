@@ -31,18 +31,14 @@ declList	: decl declList		{}
 	 	| decl			{}
 		;
 
-decl 		: INT ID ';'		{
-       					  Ginstall($2->NAME, T_INT, sizeof(int));
-					}
-		| BOOL ID ';'		{
-       					  Ginstall($2->NAME, T_BOOL, sizeof(int));
-					}
+decl 		: INT ID ';'		{ Ginstall($2->NAME, T_INT, sizeof(int)); }
+		| BOOL ID ';'		{ Ginstall($2->NAME, T_BOOL, sizeof(int)); }
+		| INT ID '[' NUM ']' ';'{ Ginstall($2->NAME, T_BOOL, sizeof(int)*$4->VALUE); }
+		;
 
 mainBody : BEGN slist END 	{ evaluate($2); exit(0); }
 	     ;
-slist 	: slist stmt		{
-      				  $$ = TreeCreate(VOID, STATEMENT, NULL, 0, NULL, $1, $2, NULL);
-				}
+slist 	: slist stmt		{ $$ = TreeCreate(VOID, STATEMENT, NULL, 0, NULL, $1, $2, NULL); }
 	| stmt			{ $$ = $1; }
      	;
 
@@ -54,13 +50,17 @@ expr	: expr PLUS expr	{ $$ = makeBinaryOperatorNode(PLUS, $1, $3, T_INT); }
      	| expr GT expr		{ $$ = makeBinaryOperatorNode(GT, $1, $3, T_BOOL); }
 	| '(' expr ')'		{ $$ = $2; }
 	| NUM			{ $$ = $1; }
-	| BOOLEAN 			{ $$ = $1; }
+	| BOOLEAN 		{ $$ = $1; }
+	| ID '[' expr ']'	{ $$ = makeBinaryOperatorNode(ARROP, $1, $4, T_INT); }
 	| ID			{
 				  $$ = $1;
 				}
 
 stmt 	: ID ASGN expr ';'	{ 
       				  $$ = TreeCreate(VOID, ASGN, $1->NAME, 0, NULL, $3, NULL, NULL);
+				}
+stmt 	: ID '[' expr ']' ASGN expr ';'	{ 
+      				  $$ = TreeCreate(VOID, ASGNARR, $1->NAME, 0, NULL, $3, $6, NULL);
 				}
 	| READ '(' ID ')' ';' 	{ 
 				  $$ = TreeCreate(VOID, READ, $3->NAME, 0, NULL, NULL, NULL, NULL);

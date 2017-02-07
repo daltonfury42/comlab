@@ -5,3 +5,5 @@
 #define CONSTANT -1005
 #define TRUE -1006
 #define FALSE -1007
+#define ARROP -1008
+#define ASGNARR -1009

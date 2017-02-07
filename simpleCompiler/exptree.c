@@ -117,6 +117,16 @@ int evaluate(struct Tnode *t){
 			*(Glookup(t->NAME) -> BINDING) = evaluate(t->left);
 			return VOID;
 			break;
+		case ASGNARR:
+			if(Glookup(t->NAME)  == NULL)
+			{
+				printf("Unallocated variable '%s'", t->NAME);
+				exit(0);
+			}
+			*(Glookup(t->NAME) -> BINDING + evaluate(t->left)) = evaluate(t->right);
+			return VOID;
+			break;
+
 		case IF:
 			if(LTOA(evaluate(t->left)))
 				return evaluate(t->right);
@@ -142,6 +152,10 @@ int evaluate(struct Tnode *t){
 		case CONTINUE:
 			return CONTINUE;
 			break;		
+		case ARROP:
+			ret = evaluate(t->right);
+			return *((Glookup(t->left->NAME) -> BINDING) + ret);
+			break;
 		default:
 			printf("Oops!");
 			exit(0);	
