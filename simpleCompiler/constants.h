@@ -8,3 +8,4 @@
 #define ARROP -1008
 #define ASGNARR -1009
 #define T_INTARR -1010
+#define T_BOOLARR -1011

@@ -98,7 +98,13 @@ int evaluate(struct Tnode *t){
 			return VOID;
 			break;
 		case WRITE:
-			printf("%d\n", evaluate(t->left));
+			ret = evaluate(t->left);
+			if (ret == TRUE)
+				printf("TRUE\n");
+			else if (ret == FALSE)
+				printf("FALSE");
+			else
+				printf("%d\n", ret);
 			return VOID;
 			break;
 		case ID:

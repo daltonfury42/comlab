@@ -35,10 +35,17 @@ decl 		: INT ID ';'		{ Ginstall($2->NAME, T_INT, sizeof(int)); }
 		| BOOL ID ';'		{ Ginstall($2->NAME, T_BOOL, sizeof(int)); }
 		| INT ID '[' NUM ']' ';'{ 	if($4->TYPE != T_INT)
 						{
-							printf("Type error in array declaration.\n");
+							printf("Type error in integer array declaration.\n");
 							exit(0);
 						}
 						Ginstall($2->NAME, T_INTARR, sizeof(int)*$4->VALUE); 
+					}
+		| BOOL ID '[' NUM ']' ';'{ 	if($4->TYPE != T_INT)
+						{
+							printf("Type error in bool array declaration.\n");
+							exit(0);
+						}
+						Ginstall($2->NAME, T_BOOLARR, sizeof(int)*$4->VALUE); 
 					}
 		;
 
@@ -102,10 +109,23 @@ expr	: expr PLUS expr	{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
 	| BOOLEAN 		{ $$ = $1; }
 	| ID '[' expr ']'	{ 	if($3->TYPE != T_INT)
        					{
-						printf("type error: []");
+						printf("type error: [expr]");
 						exit(0);
 					}
-					$$ = makeBinaryOperatorNode(ARROP, $1, $4, T_INT); }
+					if(Glookup($1->NAME)->TYPE == T_INTARR)
+					{
+						$$ = makeBinaryOperatorNode(ARROP, $1, $4, T_INT); 
+					}
+					else if(Glookup($1->NAME)->TYPE == T_BOOLARR)
+					{
+						$$ = makeBinaryOperatorNode(ARROP, $1, $4, T_BOOL); 
+					}
+					else
+					{
+						printf("Type error: [] on non array");
+						exit(0);
+					}
+				}
 	| ID			{	$1->TYPE = Glookup($1->NAME)->TYPE;
 				  	$$ = $1;
 				}
@@ -120,6 +140,7 @@ stmt 	: ID ASGN expr ';'	{
       				  	$$ = TreeCreate(VOID, ASGN, $1->NAME, 0, NULL, $3, NULL, NULL);
 				}
 stmt 	: ID '[' expr ']' ASGN expr ';'	{	if(Glookup($1->NAME)->TYPE != T_INTARR || $3->TYPE != T_INT || $6->TYPE != T_INT)
+						if(Glookup($1->NAME)->TYPE != T_BOOLARR || $3->TYPE != T_INT || $6->TYPE != T_BOOL)
        						{
 							printf("type error: []=");
 							exit(0);
