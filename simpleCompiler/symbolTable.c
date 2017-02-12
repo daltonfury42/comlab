@@ -43,14 +43,5 @@ void Ginstall(char* NAME, int TYPE, int SIZE)
 	i->TYPE = TYPE;
 	i->SIZE = SIZE;
 
-	if(TYPE == T_INT)
-		i->BINDING = malloc(sizeof(int));
-	else if (TYPE == T_BOOL)
-	{
-		i->BINDING = malloc(sizeof(int));
-	}
-	else
-	{
-		printf("Unrecognised type");
-	}
+	i->BINDING = malloc(SIZE);
 }

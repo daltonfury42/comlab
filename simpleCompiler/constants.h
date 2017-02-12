@@ -7,3 +7,4 @@
 #define FALSE -1007
 #define ARROP -1008
 #define ASGNARR -1009
+#define T_INTARR -1010
