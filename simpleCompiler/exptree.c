@@ -97,6 +97,16 @@ int evaluate(struct Tnode *t){
 			scanf("%d", (Glookup(t->NAME) -> BINDING));
 			return VOID;
 			break;
+	    	case READARR:
+			if(Glookup(t->NAME)  == NULL)
+			{
+				printf("Unallocated variable '%s'", t->NAME);
+				exit(0);
+			}
+			ret = evaluate(t->left);
+			scanf("%d", (Glookup(t->NAME) -> BINDING)+ret);
+			return VOID;
+			break;
 		case WRITE:
 			ret = evaluate(t->left);
 			if (ret == TRUE)

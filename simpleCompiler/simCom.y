@@ -145,12 +145,30 @@ stmt 	: ID '[' expr ']' ASGN expr ';'	{	if(Glookup($1->NAME)->TYPE != T_INTARR |
 							printf("type error: []=");
 							exit(0);
 						}
+						if($3->TYPE != T_INT)
+       						{
+							printf("type error: asgnarr[expr]");
+							exit(0);
+						}
 
       				 	 	$$ = TreeCreate(VOID, ASGNARR, $1->NAME, 0, NULL, $3, $6, NULL);
 					}
 	| READ '(' ID ')' ';' 	{ 
 				  $$ = TreeCreate(VOID, READ, $3->NAME, 0, NULL, NULL, NULL, NULL);
 				}
+	| READ '(' ID '[' expr ']' ')' ';' 	{ 
+							if($5->TYPE != T_INT)
+       							{
+								printf("type error: readarr[expr]");
+								exit(0);
+							}
+							if(Glookup($3->NAME)->TYPE != T_INTARR && Glookup($3->NAME)->TYPE != T_BOOLARR)
+       							{
+								printf("type error: READARR");
+								exit(0);
+							}
+					 	 	$$ = TreeCreate(VOID, READARR, $3->NAME, 0, NULL, $5, NULL, NULL);
+						}
      	| WRITE '(' expr ')' ';'{ $$ = TreeCreate(VOID, WRITE, NULL, 0, NULL, $3, NULL, NULL);
 				}
 	| IF '(' expr ')' THEN slist ENDIF ';'
