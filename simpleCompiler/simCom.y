@@ -17,8 +17,8 @@
 %token NUM BOOLEAN
 
 %nonassoc LT GT EQ
-%left PLUS
-%left MUL 
+%left PLUS SUB
+%left MUL DIV
 %%
 Program		: globalDecl mainBody	{}
 	 	| mainBody 		{}
@@ -82,6 +82,20 @@ expr	: expr PLUS expr	{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
 						exit(0);
 					}
 					$$ = makeBinaryOperatorNode(MUL, $1, $3, T_INT); 
+				}
+     	| expr SUB expr		{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
+       					{
+						printf("type error: SUB");
+						exit(0);
+					}
+					$$ = makeBinaryOperatorNode(SUB, $1, $3, T_INT); 
+				}
+     	| expr DIV expr		{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
+       					{
+						printf("type error: DIV");
+						exit(0);
+					}
+					$$ = makeBinaryOperatorNode(DIV, $1, $3, T_INT); 
 				}
      	| expr EQ expr		{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
        					{

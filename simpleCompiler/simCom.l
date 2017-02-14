@@ -39,6 +39,8 @@
 [=]		{ return ASGN; }
 "+"		{ return PLUS; }
 "*"		{ return MUL; }
+"/"		{ return DIV; }
+"-"		{ return SUB; }
 "=="		{ return EQ; }
 "<"		{ return LT; }
 ">"		{ return GT; }

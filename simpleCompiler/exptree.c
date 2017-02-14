@@ -67,8 +67,14 @@ int evaluate(struct Tnode *t){
             	case PLUS:
 		      	return evaluate(t->left) + evaluate(t->right);
                       	break;
+            	case SUB:
+		      	return evaluate(t->left) - evaluate(t->right);
+                      	break;
             	case MUL:
 		      	return evaluate(t->left) * evaluate(t->right);
+                      	break;
+            	case DIV:
+		      	return evaluate(t->left) / evaluate(t->right);
                       	break;
             	case EQ:
 		      	return ATOL(evaluate(t->left) == evaluate(t->right));
