@@ -100,7 +100,10 @@ int evaluate(struct Tnode *t){
 				exit(0);
 			}
 			
-			scanf("%d", (Glookup(t->NAME) -> BINDING));
+			if(!scanf("%d", (Glookup(t->NAME) -> BINDING)))
+			{
+				printf("Runtime type checker warning!");
+			}
 			return VOID;
 			break;
 	    	case READARR:
@@ -110,7 +113,10 @@ int evaluate(struct Tnode *t){
 				exit(0);
 			}
 			ret = evaluate(t->left);
-			scanf("%d", (Glookup(t->NAME) -> BINDING)+ret);
+			if(!scanf("%d", (Glookup(t->NAME) -> BINDING)+ret))
+			{
+				printf("Runtime type checker warning!");
+			}
 			return VOID;
 			break;
 		case WRITE:
@@ -126,6 +132,7 @@ int evaluate(struct Tnode *t){
 		case ID:
 			if(Glookup(t->NAME)  == NULL)
 			{
+				printf("Unallocated variable %s.\n", t->NAME);
 				exit(0);
 			}
 			return *(Glookup(t->NAME) -> BINDING);
