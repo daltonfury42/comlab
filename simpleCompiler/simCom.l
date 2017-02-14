@@ -35,7 +35,7 @@
 			yylval = TreeCreate(VOID, ID, varName, 0, NULL, NULL, NULL, NULL); 
 			return ID;
 		}
-[0-9]+		{ yylval = makeLeafNode(atoi(yytext), T_INT); return NUM; }
+"-"?[0-9]+		{ yylval = makeLeafNode(atoi(yytext), T_INT); return NUM; }
 [=]		{ return ASGN; }
 "+"		{ return PLUS; }
 "*"		{ return MUL; }

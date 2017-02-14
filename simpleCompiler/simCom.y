@@ -31,21 +31,43 @@ declList	: decl declList		{}
 	 	| decl			{}
 		;
 
-decl 		: INT ID ';'		{ Ginstall($2->NAME, T_INT, sizeof(int)); }
-		| BOOL ID ';'		{ Ginstall($2->NAME, T_BOOL, sizeof(int)); }
-		| INT ID '[' NUM ']' ';'{ 	if($4->TYPE != T_INT)
+decl 		: INT intlist ';'
+       		| BOOL boollist ';'
+		;
+
+intlist		: intlist ',' ID 		{ Ginstall($3->NAME, T_INT, sizeof(int)); }
+		| ID 				{ Ginstall($1->NAME, T_INT, sizeof(int)); }
+		| intlist ',' ID '[' NUM ']'	{ 	if($5->TYPE != T_INT)
+							{
+								printf("Type error in integer array declaration.\n");
+								exit(0);
+							}
+							Ginstall($3->NAME, T_INTARR, sizeof(int)*$5->VALUE); 
+				 		}
+		| ID '[' NUM ']' 	{ 	if($3->TYPE != T_INT)
 						{
 							printf("Type error in integer array declaration.\n");
 							exit(0);
 						}
-						Ginstall($2->NAME, T_INTARR, sizeof(int)*$4->VALUE); 
-					}
-		| BOOL ID '[' NUM ']' ';'{ 	if($4->TYPE != T_INT)
+						Ginstall($1->NAME, T_INTARR, sizeof(int)*$3->VALUE); 
+				 	}
+		;
+
+boollist	: boollist ',' ID 		{ Ginstall($3->NAME, T_BOOL, sizeof(int)); }
+		| ID 			{ Ginstall($1->NAME, T_BOOL, sizeof(int)); }
+		| boollist ',' ID '[' NUM ']' 	{ 	if($5->TYPE != T_INT)
 						{
 							printf("Type error in bool array declaration.\n");
 							exit(0);
 						}
-						Ginstall($2->NAME, T_BOOLARR, sizeof(int)*$4->VALUE); 
+						Ginstall($3->NAME, T_BOOLARR, sizeof(int)*$5->VALUE); 
+					}
+		| ID '[' NUM ']' 	{ 	if($3->TYPE != T_INT)
+						{
+							printf("Type error in bool array declaration.\n");
+							exit(0);
+						}
+						Ginstall($1->NAME, T_BOOLARR, sizeof(int)*$3->VALUE); 
 					}
 		;
 
