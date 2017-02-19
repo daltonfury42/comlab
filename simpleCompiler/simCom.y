@@ -5,6 +5,7 @@
 	#include <stdlib.h>
 	#include <stdio.h>	
 	#include "constants.h"
+	#include "codeGen.h"
 	extern FILE* yyin;
 	int vartype;
 
@@ -80,7 +81,7 @@ varlist		: varlist ',' ID 		{ Ginstall($3->NAME, vartype, 1); }
 				 	}
 		;
 
-mainBody : BEGN slist END 	{ evaluate($2); exit(0); }
+mainBody : BEGN slist END 	{ printHeader(); codeGen($2); printFooter(); exit(0); }
 	     ;
 slist 	: slist stmt		{ 	if($1->TYPE != VOID || $2->TYPE != VOID)
        					{

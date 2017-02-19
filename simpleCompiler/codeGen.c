@@ -35,6 +35,20 @@ int getLabel()
 	return labelTracker++;
 }
 
+void printHeader()
+{
+	//TODO
+	fprintf(stdout, "MAGIC\n");
+	fprintf(stdout, "2048\n");
+	fprintf(stdout, "0\n0\n0\n0\n0\n0\n");
+	fprintf(stdout, "START\n");
+}
+
+void printFooter()
+{
+	fprintf(stdout, "HALT\n");
+}
+
 int codeGen(struct Tnode* t)
 {
 	int r1, r2;
@@ -126,6 +140,16 @@ int codeGen(struct Tnode* t)
 			fprintf(stdout, "MOV R%d [%d]\n", r1, Glookup(t->NAME)->BINDING);
 			return r1;
 			break;
+		case ASGN:
+			if(Glookup(t->NAME) == NULL)
+			{
+				printf("Unallocated variable '%s'", t->NAME);
+				exit(0);
+			}
+			r1 = codeGen(t->left);
+			fprintf(stdout, "MOV [%d] R%d\n", Glookup(t->NAME)->BINDING, r1);
+			return VOID;
+			break;	
 		default:
 			printf("Default case(%d) executed in codeGen switch.\n", t->NODETYPE);
 			exit(0);
