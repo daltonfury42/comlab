@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 extern struct Gsymbol * GST;
+int nextFreeLocation = 0;
 
 struct Gsymbol *Glookup(char* NAME)
 {
@@ -48,5 +49,6 @@ void Ginstall(char* NAME, int TYPE, int SIZE)
 	i->TYPE = TYPE;
 	i->SIZE = SIZE;
 
-	i->BINDING = malloc(SIZE);
+	i->BINDING = nextFreeLocation;
+	nextFreeLocation += SIZE;
 }

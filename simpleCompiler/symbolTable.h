@@ -10,7 +10,7 @@ struct Gsymbol {
 
 	int SIZE; // Size field for arrays
 
-	int* BINDING; // Address of the Identifier in Memory
+	int BINDING; // Address of the Identifier in Memory
 
 //	ArgStruct *ARGLIST; // Argument List for functions
 

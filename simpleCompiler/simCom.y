@@ -39,8 +39,8 @@ type		: INT			{ vartype = T_INT; }
 		| BOOL 			{ vartype = T_BOOL; }
 		;
 
-varlist		: varlist ',' ID 		{ Ginstall($3->NAME, vartype, sizeof(int)); }
-		| ID 				{ Ginstall($1->NAME, vartype, sizeof(int)); }
+varlist		: varlist ',' ID 		{ Ginstall($3->NAME, vartype, 1); }
+		| ID 				{ Ginstall($1->NAME, vartype, 1); }
 		| varlist ',' ID '[' NUM ']'	{ 	if($5->TYPE != T_INT)
 							{
 								printf("Type error in integer array declaration.\n");
@@ -48,11 +48,11 @@ varlist		: varlist ',' ID 		{ Ginstall($3->NAME, vartype, sizeof(int)); }
 							}
 							if(vartype == T_INT)
 							{
-								Ginstall($3->NAME, T_INTARR, sizeof(int)*$5->VALUE); 
+								Ginstall($3->NAME, T_INTARR, $5->VALUE); 
 							}
 							else if(vartype == T_BOOL)
 							{
-								Ginstall($3->NAME, T_BOOLARR, sizeof(int)*$5->VALUE); 
+								Ginstall($3->NAME, T_BOOLARR, $5->VALUE); 
 							}
 							else
 							{
@@ -67,11 +67,11 @@ varlist		: varlist ',' ID 		{ Ginstall($3->NAME, vartype, sizeof(int)); }
 						}
 							if(vartype == T_INT)
 							{
-								Ginstall($1->NAME, T_INTARR, sizeof(int)*$3->VALUE); 
+								Ginstall($1->NAME, T_INTARR, $3->VALUE); 
 							}
 							else if(vartype == T_BOOL)
 							{
-								Ginstall($1->NAME, T_BOOLARR, sizeof(int)*$3->VALUE); 
+								Ginstall($1->NAME, T_BOOLARR, $3->VALUE); 
 							}
 							else
 							{

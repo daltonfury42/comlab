@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "exptree.h"
+#include "codeGen.h"
 #include "symbolTable.h"
 #include "constants.h"
 
@@ -57,6 +58,10 @@ int ATOL(int a)
 }
 
 int evaluate(struct Tnode *t){
+	codeGen(t);
+}
+
+	/*
 	int ret;
     if(t->NODETYPE == CONSTANT){
         return t->VALUE;
@@ -192,4 +197,4 @@ int evaluate(struct Tnode *t){
     }
 }
 
-
+*/
