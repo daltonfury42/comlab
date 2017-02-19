@@ -23,6 +23,11 @@ struct Gsymbol *Glookup(char* NAME)
 void Ginstall(char* NAME, int TYPE, int SIZE)
 {
 	struct Gsymbol *i;
+	if(Glookup(NAME)!=NULL)
+	{
+		printf("Multiple declaration of variable %s", NAME);
+		exit(0);
+	}
 
 	if (GST == NULL)
 	{

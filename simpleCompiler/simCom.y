@@ -6,6 +6,7 @@
 	#include <stdio.h>	
 	#include "constants.h"
 	extern FILE* yyin;
+	int vartype;
 
 	int yylex();
 	int yyerror(const char*);
@@ -31,44 +32,52 @@ declList	: decl declList		{}
 	 	| decl			{}
 		;
 
-decl 		: INT intlist ';'
-       		| BOOL boollist ';'
+decl 		: type varlist ';'
 		;
 
-intlist		: intlist ',' ID 		{ Ginstall($3->NAME, T_INT, sizeof(int)); }
-		| ID 				{ Ginstall($1->NAME, T_INT, sizeof(int)); }
-		| intlist ',' ID '[' NUM ']'	{ 	if($5->TYPE != T_INT)
+type		: INT			{ vartype = T_INT; }
+		| BOOL 			{ vartype = T_BOOL; }
+		;
+
+varlist		: varlist ',' ID 		{ Ginstall($3->NAME, vartype, sizeof(int)); }
+		| ID 				{ Ginstall($1->NAME, vartype, sizeof(int)); }
+		| varlist ',' ID '[' NUM ']'	{ 	if($5->TYPE != T_INT)
 							{
 								printf("Type error in integer array declaration.\n");
 								exit(0);
 							}
-							Ginstall($3->NAME, T_INTARR, sizeof(int)*$5->VALUE); 
+							if(vartype == T_INT)
+							{
+								Ginstall($3->NAME, T_INTARR, sizeof(int)*$5->VALUE); 
+							}
+							else if(vartype == T_BOOL)
+							{
+								Ginstall($3->NAME, T_BOOLARR, sizeof(int)*$5->VALUE); 
+							}
+							else
+							{
+								printf("Type error(2) in integer array declaration.\n");
+							}
+						
 				 		}
 		| ID '[' NUM ']' 	{ 	if($3->TYPE != T_INT)
 						{
 							printf("Type error in integer array declaration.\n");
 							exit(0);
 						}
-						Ginstall($1->NAME, T_INTARR, sizeof(int)*$3->VALUE); 
+							if(vartype == T_INT)
+							{
+								Ginstall($1->NAME, T_INTARR, sizeof(int)*$3->VALUE); 
+							}
+							else if(vartype == T_BOOL)
+							{
+								Ginstall($1->NAME, T_BOOLARR, sizeof(int)*$3->VALUE); 
+							}
+							else
+							{
+								printf("Type error(3) in integer array declaration.\n");
+							}
 				 	}
-		;
-
-boollist	: boollist ',' ID 		{ Ginstall($3->NAME, T_BOOL, sizeof(int)); }
-		| ID 			{ Ginstall($1->NAME, T_BOOL, sizeof(int)); }
-		| boollist ',' ID '[' NUM ']' 	{ 	if($5->TYPE != T_INT)
-						{
-							printf("Type error in bool array declaration.\n");
-							exit(0);
-						}
-						Ginstall($3->NAME, T_BOOLARR, sizeof(int)*$5->VALUE); 
-					}
-		| ID '[' NUM ']' 	{ 	if($3->TYPE != T_INT)
-						{
-							printf("Type error in bool array declaration.\n");
-							exit(0);
-						}
-						Ginstall($1->NAME, T_BOOLARR, sizeof(int)*$3->VALUE); 
-					}
 		;
 
 mainBody : BEGN slist END 	{ evaluate($2); exit(0); }

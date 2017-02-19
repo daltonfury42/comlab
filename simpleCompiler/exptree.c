@@ -4,7 +4,6 @@
 #include "symbolTable.h"
 #include "constants.h"
 
-extern int* var[26];
 
 struct Tnode* makeLeafNode(int n, int TYPE){
     struct Tnode *temp;
