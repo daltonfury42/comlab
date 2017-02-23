@@ -172,18 +172,18 @@ expr	: expr PLUS expr	{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
 						exit(0);
 					}
 				}
-	| ID			{	if(GLookup($1->NAME) == NULL)
+	| ID			{	if(Glookup($1->NAME) == NULL)
 					{
-						printf("Unallocated variable %s.\n", $3->NAME);
+						printf("Unallocated variable %s.\n", $1->NAME);
 						exit(0);
 					}
 					$1->TYPE = Glookup($1->NAME)->TYPE;
 				  	$$ = $1;
 				}
 
-stmt 	: ID ASGN expr ';'	{ 	if(GLookup($1->NAME) == NULL)
+stmt 	: ID ASGN expr ';'	{ 	if(Glookup($1->NAME) == NULL)
 					{
-						printf("Unallocated variable %s.\n", $3->NAME);
+						printf("Unallocated variable %s.\n", $1->NAME);
 						exit(0);
 					}
       					if(Glookup($1->NAME)->TYPE != $3->TYPE)
@@ -194,9 +194,9 @@ stmt 	: ID ASGN expr ';'	{ 	if(GLookup($1->NAME) == NULL)
 				
       				  	$$ = TreeCreate(VOID, ASGN, $1->NAME, 0, NULL, $3, NULL, NULL);
 				}
-stmt 	: ID '[' expr ']' ASGN expr ';'	{	if(GLookup($1->NAME) == NULL)
+stmt 	: ID '[' expr ']' ASGN expr ';'	{	if(Glookup($1->NAME) == NULL)
 						{
-							printf("Unallocated variable %s.\n", $3->NAME);
+							printf("Unallocated variable %s.\n", $1->NAME);
 							exit(0);
 						}
 						if(Glookup($1->NAME)->TYPE != T_INTARR || $3->TYPE != T_INT || $6->TYPE != T_INT)
@@ -214,7 +214,7 @@ stmt 	: ID '[' expr ']' ASGN expr ';'	{	if(GLookup($1->NAME) == NULL)
       				 	 	$$ = TreeCreate(VOID, ASGNARR, $1->NAME, 0, NULL, $3, $6, NULL);
 					}
 	| READ '(' ID ')' ';' 	{ 
-				  	if(GLookup($3->NAME) == NULL)
+				  	if(Glookup($3->NAME) == NULL)
 					{
 						printf("Unallocated variable %s.\n", $3->NAME);
 						exit(0);
