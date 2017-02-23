@@ -37,7 +37,6 @@ int getLabel()
 
 void printHeader()
 {
-	//TODO
 	fprintf(stdout, "MAGIC\n");
 	fprintf(stdout, "2048\n");
 	fprintf(stdout, "0\n0\n0\n0\n0\n0\n");
@@ -51,7 +50,7 @@ void printFooter()
 
 int codeGen(struct Tnode* t)
 {
-	int r1, r2;
+	int r1, r2, l1, l2;
 	switch(t->NODETYPE){
 		case CONSTANT:
 			r1 = getReg();
@@ -112,12 +111,6 @@ int codeGen(struct Tnode* t)
 			codeGen(t->left);
 			return codeGen(t->right);
 			break;
-		case WRITE:
-			r1 = codeGen(t->left);
-			fprintf(stdout, "OUT R%d\n", r1);
-			freeReg();
-			return VOID;
-			break;
 		case READ:
 			if(Glookup(t->NAME) == NULL)
 			{
@@ -127,6 +120,12 @@ int codeGen(struct Tnode* t)
 			r1 = getReg();
 			fprintf(stdout, "IN R%d\n", r1);
 			fprintf(stdout, "MOV [%d] R%d\n", Glookup(t->NAME)->BINDING, r1);
+			freeReg();
+			return VOID;
+			break;
+		case WRITE:
+			r1 = codeGen(t->left);
+			fprintf(stdout, "OUT R%d\n", r1);
 			freeReg();
 			return VOID;
 			break;
@@ -149,7 +148,30 @@ int codeGen(struct Tnode* t)
 			r1 = codeGen(t->left);
 			fprintf(stdout, "MOV [%d] R%d\n", Glookup(t->NAME)->BINDING, r1);
 			return VOID;
-			break;	
+			break;
+		case IF:
+			if(t->middle != NULL)
+			{
+				r1 = codeGen(t->left);
+				l1 = getLabel(); //Else
+				l2 = getLabel(); //Endif
+				fprintf(stdout, "JZ R%d, L%d\n", r1, l1);	
+				codeGen(t->right);
+				fprintf(stdout, "JMP L%d\n", l2);
+				fprintf(stdout, "L%d:\n", l1);
+				codeGen(t->middle);
+				fprintf(stdout, "L%d:\n", l2);
+			}
+			else
+			{
+				r1 = codeGen(t->left);
+				l1 = getLabel(); //Endif
+				fprintf(stdout, "JZ R%d, L%d\n", r1, l1);	
+				codeGen(t->right);
+				fprintf(stdout, "L%d:\n", l1);
+			}
+			return VOID;
+			break;
 		default:
 			printf("Default case(%d) executed in codeGen switch.\n", t->NODETYPE);
 			exit(0);
