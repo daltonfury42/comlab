@@ -172,11 +172,20 @@ expr	: expr PLUS expr	{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
 						exit(0);
 					}
 				}
-	| ID			{	$1->TYPE = Glookup($1->NAME)->TYPE;
+	| ID			{	if(GLookup($1->NAME) == NULL)
+					{
+						printf("Unallocated variable %s.\n", $3->NAME);
+						exit(0);
+					}
+					$1->TYPE = Glookup($1->NAME)->TYPE;
 				  	$$ = $1;
 				}
 
-stmt 	: ID ASGN expr ';'	{ 
+stmt 	: ID ASGN expr ';'	{ 	if(GLookup($1->NAME) == NULL)
+					{
+						printf("Unallocated variable %s.\n", $3->NAME);
+						exit(0);
+					}
       					if(Glookup($1->NAME)->TYPE != $3->TYPE)
        					{
 						printf("type error: ASSG");
@@ -185,7 +194,12 @@ stmt 	: ID ASGN expr ';'	{
 				
       				  	$$ = TreeCreate(VOID, ASGN, $1->NAME, 0, NULL, $3, NULL, NULL);
 				}
-stmt 	: ID '[' expr ']' ASGN expr ';'	{	if(Glookup($1->NAME)->TYPE != T_INTARR || $3->TYPE != T_INT || $6->TYPE != T_INT)
+stmt 	: ID '[' expr ']' ASGN expr ';'	{	if(GLookup($1->NAME) == NULL)
+						{
+							printf("Unallocated variable %s.\n", $3->NAME);
+							exit(0);
+						}
+						if(Glookup($1->NAME)->TYPE != T_INTARR || $3->TYPE != T_INT || $6->TYPE != T_INT)
 						if(Glookup($1->NAME)->TYPE != T_BOOLARR || $3->TYPE != T_INT || $6->TYPE != T_BOOL)
        						{
 							printf("type error: []=");
@@ -200,12 +214,22 @@ stmt 	: ID '[' expr ']' ASGN expr ';'	{	if(Glookup($1->NAME)->TYPE != T_INTARR |
       				 	 	$$ = TreeCreate(VOID, ASGNARR, $1->NAME, 0, NULL, $3, $6, NULL);
 					}
 	| READ '(' ID ')' ';' 	{ 
-				  $$ = TreeCreate(VOID, READ, $3->NAME, 0, NULL, NULL, NULL, NULL);
+				  	if(GLookup($3->NAME) == NULL)
+					{
+						printf("Unallocated variable %s.\n", $3->NAME);
+						exit(0);
+					}
+				 	$$ = TreeCreate(VOID, READ, $3->NAME, 0, NULL, NULL, NULL, NULL);
 				}
 	| READ '(' ID '[' expr ']' ')' ';' 	{ 
 							if($5->TYPE != T_INT)
        							{
 								printf("type error: readarr[expr]");
+								exit(0);
+							}
+							if(Glookup($3->NAME) == NULL)
+							{
+								printf("Unallocated variable %s.\n", $3->NAME);
 								exit(0);
 							}
 							if(Glookup($3->NAME)->TYPE != T_INTARR && Glookup($3->NAME)->TYPE != T_BOOLARR)

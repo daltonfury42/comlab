@@ -112,11 +112,6 @@ int codeGen(struct Tnode* t)
 			return codeGen(t->right);
 			break;
 		case READ:
-			if(Glookup(t->NAME) == NULL)
-			{
-				printf("Unallocated variable '%s'", t->NAME);
-				exit(0);
-			}
 			r1 = getReg();
 			fprintf(stdout, "IN R%d\n", r1);
 			fprintf(stdout, "MOV [%d], R%d\n", Glookup(t->NAME)->BINDING, r1);
@@ -130,21 +125,11 @@ int codeGen(struct Tnode* t)
 			return VOID;
 			break;
 		case ID:
-			if(Glookup(t->NAME) == NULL)
-			{
-				printf("Unallocated variable '%s'", t->NAME);
-				exit(0);
-			}
 			r1 = getReg();
 			fprintf(stdout, "MOV R%d, [%d]\n", r1, Glookup(t->NAME)->BINDING);
 			return r1;
 			break;
 		case ASGN:
-			if(Glookup(t->NAME) == NULL)
-			{
-				printf("Unallocated variable '%s'", t->NAME);
-				exit(0);
-			}
 			r1 = codeGen(t->left);
 			fprintf(stdout, "MOV [%d], R%d\n", Glookup(t->NAME)->BINDING, r1);
 			freeReg();
