@@ -190,6 +190,19 @@ int codeGen(struct Tnode* t)
 			freeReg();
 			return r1;
 			break;
+		case READARR:
+			r1 = getReg();
+			fprintf(stdout, "MOV R%d, %d\n", r1, (Glookup(t->NAME) -> BINDING));
+			r2 = codeGen(t->left);
+			fprintf(stdout, "ADD R%d, R%d\n", r1, r2);
+			r3 = getReg();
+			fprintf(stdout, "IN R%d\n", r3);
+			fprintf(stdout, "MOV [%d], R%d\n", r1, r3);
+			freeReg();
+			freeReg();
+			freeReg();
+			return VOID;
+			break;
 		default:
 			printf("Default case(%d) executed in codeGen switch.\n", t->NODETYPE);
 			exit(0);
