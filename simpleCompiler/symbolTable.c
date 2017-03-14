@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 extern struct Gsymbol * GST;
-int nextFreeLocation = 0;
+int nextFreeLocation = 4096;
 
 struct Gsymbol *Glookup(char* NAME)
 {
