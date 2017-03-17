@@ -42,6 +42,7 @@ void printHeader()
 	fprintf(stdout, "0\n");
 	fprintf(stdout, "2056\n");
 	fprintf(stdout, "0\n0\n0\n0\n0\n0\n");
+	fprintf(stdout, "MOV SP, %d\n", nextFreeLocation);
 }
 
 void printFooter()
@@ -132,10 +133,11 @@ int codeGen(struct Tnode* t)
 			//Arg2
 			fprintf(stdout, "MOV R%d,SP\n", r1);
 			fprintf(stdout, "SUB R%d,2\n", r1);
+			fprintf(stdout, "MOV R%d, [R%d]\n", r1, r1);
 			fprintf(stdout, "PUSH R%d\n", r1);
 
 			//Arg3
-			fprintf(stdout, "PUSH R%d\n", r2);
+			fprintf(stdout, "PUSH R%d\n", r1);
 
 			//Return Space
 			fprintf(stdout, "PUSH R%d\n", r1);
@@ -146,7 +148,7 @@ int codeGen(struct Tnode* t)
 			fprintf(stdout, "POP R%d\n", r1); //Arg3
 			fprintf(stdout, "POP R%d\n", r1); //Arg2
 			fprintf(stdout, "POP R%d\n", r1); //Arg1
-			fprintf(stdout, "POP R%d\n", r1); //Runct Code
+			fprintf(stdout, "POP R%d\n", r1); //Funct Code
 
 			freeReg();
 
@@ -243,7 +245,7 @@ int codeGen(struct Tnode* t)
 			r1 = codeGen(t->left);
 			fprintf(stdout, "JZ R%d, L%d\n", r1, l2);
 			codeGen(t->right);
-			fprintf(stdout, "L%d\n", l2);
+			fprintf(stdout, "L%d:\n", l2);
 			freeReg();
 			return VOID;
 			break;
@@ -288,7 +290,8 @@ int codeGen(struct Tnode* t)
 
 			//Arg2
 			fprintf(stdout, "MOV R%d,SP\n", r2);
-			fprintf(stdout, "SUB R%d,2\n", r2);
+			fprintf(stdout, "SUB R%d,3\n", r2);
+			fprintf(stdout, "MOV R%d, [R%d]\n", r2, r2);
 			fprintf(stdout, "PUSH R%d\n", r2);
 
 			//Arg3
