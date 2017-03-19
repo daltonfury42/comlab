@@ -6,7 +6,9 @@
 	#include <stdio.h>	
 	#include "constants.h"
 	#include "codeGen.h"
+
 	extern FILE* yyin;
+	FILE* fp;
 	int vartype;
 
 	int yylex();
@@ -81,7 +83,16 @@ varlist		: varlist ',' ID 		{ Ginstall($3->NAME, vartype, 1); }
 				 	}
 		;
 
-mainBody : BEGN slist END 	{ printHeader(); codeGen($2); printFooter(); exit(0); }
+mainBody : BEGN slist END 	{ 	fp = fopen("tmp.out", "w");
+	 				printHeader(); 
+					codeGen($2); 
+					printFooter(); 
+					fclose(fp);
+					//yyin = fopen("tmp.out", "r");
+					//fp = fopen("tmp2.out", "w");
+					//yyparse();
+					exit(0); 
+				}
 	     ;
 slist 	: slist stmt		{ 	if($1->TYPE != VOID || $2->TYPE != VOID)
        					{

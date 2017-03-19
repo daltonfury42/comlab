@@ -9,6 +9,8 @@
 int nextFreeReg = 0;
 int labelTracker = 1;
 extern int nextFreeLocation;
+extern FILE *fp;
+
 
 int getReg()
 {
@@ -39,15 +41,15 @@ int getLabel()
 
 void printHeader()
 {
-	fprintf(stdout, "0\n");
-	fprintf(stdout, "2056\n");
-	fprintf(stdout, "0\n0\n0\n0\n0\n0\n");
-	fprintf(stdout, "MOV SP, %d\n", nextFreeLocation);
+	fprintf(fp, "0\n");
+	fprintf(fp, "2056\n");
+	fprintf(fp, "0\n0\n0\n0\n0\n0\n");
+	fprintf(fp, "MOV SP, %d\n", nextFreeLocation);
 }
 
 void printFooter()
 {
-	fprintf(stdout, "INT 10\n");
+	fprintf(fp, "INT 10\n");
 }
 
 int codeGen(struct Tnode* t)
@@ -56,55 +58,55 @@ int codeGen(struct Tnode* t)
 	switch(t->NODETYPE){
 		case CONSTANT:
 			r1 = getReg();
-			fprintf(stdout, "MOV R%d, %d\n", r1, t->VALUE);
+			fprintf(fp, "MOV R%d, %d\n", r1, t->VALUE);
 			return r1;
 			break;
 		case PLUS:
 			r1 = codeGen(t->left);
 			r2 = codeGen(t->right);
-			fprintf(stdout, "ADD R%d, R%d\n", r1, r2);
+			fprintf(fp, "ADD R%d, R%d\n", r1, r2);
 			freeReg();
 			return r1;
 			break;
 		case SUB:
 			r1 = codeGen(t->left);
 			r2 = codeGen(t->right);
-			fprintf(stdout, "SUB R%d, R%d\n", r1, r2);
+			fprintf(fp, "SUB R%d, R%d\n", r1, r2);
 			freeReg();
 			return r1;
 			break;
 		case DIV:
 			r1 = codeGen(t->left);
 			r2 = codeGen(t->right);
-			fprintf(stdout, "DIV R%d, R%d\n", r1, r2);
+			fprintf(fp, "DIV R%d, R%d\n", r1, r2);
 			freeReg();
 			return r1;
 			break;
 		case MUL:
 			r1 = codeGen(t->left);
 			r2 = codeGen(t->right);
-			fprintf(stdout, "MUL R%d, R%d\n", r1, r2);
+			fprintf(fp, "MUL R%d, R%d\n", r1, r2);
 			freeReg();
 			return r1;
 			break;
 		case EQ:
 			r1 = codeGen(t->left);
 			r2 = codeGen(t->right);
-			fprintf(stdout, "EQ R%d, R%d\n", r1, r2);
+			fprintf(fp, "EQ R%d, R%d\n", r1, r2);
 			freeReg();
 			return r1;
 			break;
 		case GT:
 			r1 = codeGen(t->left);
 			r2 = codeGen(t->right);
-			fprintf(stdout, "GT R%d, R%d\n", r1, r2);
+			fprintf(fp, "GT R%d, R%d\n", r1, r2);
 			freeReg();
 			return r1;
 			break;
 		case LT:
 			r1 = codeGen(t->left);
 			r2 = codeGen(t->right);
-			fprintf(stdout, "LT R%d, R%d\n", r1, r2);
+			fprintf(fp, "LT R%d, R%d\n", r1, r2);
 			freeReg();
 			return r1;
 			break;
@@ -115,45 +117,45 @@ int codeGen(struct Tnode* t)
 			break;
 		case READ:
 			r2 = getReg();  //register to store result
-			fprintf(stdout, "MOV R%d, %d\n", r2, Glookup(t->NAME)->BINDING);
+			fprintf(fp, "MOV R%d, %d\n", r2, Glookup(t->NAME)->BINDING);
 
 			for(r1=0; r1<nextFreeReg; r1++)
-				fprintf(stdout, "PUSH R%d\n", r1);
+				fprintf(fp, "PUSH R%d\n", r1);
 
 			r1 = getReg();  //register for push/pops
 
 			//Funct Code
-			fprintf(stdout, "MOV R%d,\"Read\"\n", r1);
-			fprintf(stdout, "PUSH R%d\n", r1);
+			fprintf(fp, "MOV R%d,\"Read\"\n", r1);
+			fprintf(fp, "PUSH R%d\n", r1);
 
 			//Arg 1
-			fprintf(stdout, "MOV R%d,-1\n", r1);
-			fprintf(stdout, "PUSH R%d\n", r1);
+			fprintf(fp, "MOV R%d,-1\n", r1);
+			fprintf(fp, "PUSH R%d\n", r1);
 
 			//Arg2
-			fprintf(stdout, "MOV R%d,SP\n", r1);
-			fprintf(stdout, "SUB R%d,2\n", r1);
-			fprintf(stdout, "MOV R%d, [R%d]\n", r1, r1);
-			fprintf(stdout, "PUSH R%d\n", r1);
+			fprintf(fp, "MOV R%d,SP\n", r1);
+			fprintf(fp, "SUB R%d,2\n", r1);
+			fprintf(fp, "MOV R%d, [R%d]\n", r1, r1);
+			fprintf(fp, "PUSH R%d\n", r1);
 
 			//Arg3
-			fprintf(stdout, "PUSH R%d\n", r1);
+			fprintf(fp, "PUSH R%d\n", r1);
 
 			//Return Space
-			fprintf(stdout, "PUSH R%d\n", r1);
+			fprintf(fp, "PUSH R%d\n", r1);
 
-			fprintf(stdout, "CALL 0\n");
+			fprintf(fp, "CALL 0\n");
 
-			fprintf(stdout, "POP R%d\n", r1); //return value
-			fprintf(stdout, "POP R%d\n", r1); //Arg3
-			fprintf(stdout, "POP R%d\n", r1); //Arg2
-			fprintf(stdout, "POP R%d\n", r1); //Arg1
-			fprintf(stdout, "POP R%d\n", r1); //Funct Code
+			fprintf(fp, "POP R%d\n", r1); //return value
+			fprintf(fp, "POP R%d\n", r1); //Arg3
+			fprintf(fp, "POP R%d\n", r1); //Arg2
+			fprintf(fp, "POP R%d\n", r1); //Arg1
+			fprintf(fp, "POP R%d\n", r1); //Funct Code
 
 			freeReg();
 
 			for(r1=nextFreeReg-2; r1>=0; r1--)	//pop all pushed registers
-				fprintf(stdout, "POP R%d\n", r1);
+				fprintf(fp, "POP R%d\n", r1);
 
 			
 			freeReg();
@@ -163,41 +165,41 @@ int codeGen(struct Tnode* t)
 		case WRITE:
 			r1 = codeGen(t->left);
 			for(r2=0; r2<nextFreeReg; r2++)
-				fprintf(stdout, "PUSH R%d\n", r2);
+				fprintf(fp, "PUSH R%d\n", r2);
 
 			r2 = getReg();
 
 			//Function Code
-			fprintf(stdout, "MOV R%d,\"Write\"\n", r2);
-			fprintf(stdout, "PUSH R%d\n", r2);
+			fprintf(fp, "MOV R%d,\"Write\"\n", r2);
+			fprintf(fp, "PUSH R%d\n", r2);
 
 			//Arg1
-			fprintf(stdout, "MOV R%d,-2\n", r2);
-			fprintf(stdout, "PUSH R%d\n", r2);
+			fprintf(fp, "MOV R%d,-2\n", r2);
+			fprintf(fp, "PUSH R%d\n", r2);
 
 			//Arg2
-			fprintf(stdout, "MOV R%d,SP\n", r2);
-			fprintf(stdout, "SUB R%d,2\n", r2);
-			fprintf(stdout, "PUSH R%d\n", r2);
+			fprintf(fp, "MOV R%d,SP\n", r2);
+			fprintf(fp, "SUB R%d,2\n", r2);
+			fprintf(fp, "PUSH R%d\n", r2);
 
 			//Arg3
-			fprintf(stdout, "PUSH R%d\n", r2);
+			fprintf(fp, "PUSH R%d\n", r2);
 
 			//Retrun Value
-			fprintf(stdout, "PUSH R%d\n", r2);
+			fprintf(fp, "PUSH R%d\n", r2);
 			
-			fprintf(stdout, "CALL 0\n", r2);
+			fprintf(fp, "CALL 0\n", r2);
 
-			fprintf(stdout, "POP R%d\n", r1); //return value
-			fprintf(stdout, "POP R%d\n", r2); //Arg3
-			fprintf(stdout, "POP R%d\n", r2); //Arg2
-			fprintf(stdout, "POP R%d\n", r2); //Arg1
-			fprintf(stdout, "POP R%d\n", r2); //Funct. Code
+			fprintf(fp, "POP R%d\n", r1); //return value
+			fprintf(fp, "POP R%d\n", r2); //Arg3
+			fprintf(fp, "POP R%d\n", r2); //Arg2
+			fprintf(fp, "POP R%d\n", r2); //Arg1
+			fprintf(fp, "POP R%d\n", r2); //Funct. Code
 			
 			freeReg();
 
 			for(r2=nextFreeReg-2; r2>=0; r2--)	//pop all pushed registers
-				fprintf(stdout, "POP R%d\n", r2);
+				fprintf(fp, "POP R%d\n", r2);
 
 			freeReg();
 
@@ -205,12 +207,12 @@ int codeGen(struct Tnode* t)
 			break;
 		case ID:
 			r1 = getReg();
-			fprintf(stdout, "MOV R%d, [%d]\n", r1, Glookup(t->NAME)->BINDING);
+			fprintf(fp, "MOV R%d, [%d]\n", r1, Glookup(t->NAME)->BINDING);
 			return r1;
 			break;
 		case ASGN:
 			r1 = codeGen(t->left);
-			fprintf(stdout, "MOV [%d], R%d\n", Glookup(t->NAME)->BINDING, r1);
+			fprintf(fp, "MOV [%d], R%d\n", Glookup(t->NAME)->BINDING, r1);
 			freeReg();
 			return VOID;
 			break;
@@ -220,20 +222,20 @@ int codeGen(struct Tnode* t)
 				r1 = codeGen(t->left);
 				l1 = getLabel(); //Else
 				l2 = getLabel(); //Endif
-				fprintf(stdout, "JZ R%d, L%d\n", r1, l1);	
+				fprintf(fp, "JZ R%d, L%d\n", r1, l1);	
 				codeGen(t->right);
-				fprintf(stdout, "JMP L%d\n", l2);
-				fprintf(stdout, "L%d:\n", l1);
+				fprintf(fp, "JMP L%d\n", l2);
+				fprintf(fp, "L%d:\n", l1);
 				codeGen(t->middle);
-				fprintf(stdout, "L%d:\n", l2);
+				fprintf(fp, "L%d:\n", l2);
 			}
 			else
 			{
 				r1 = codeGen(t->left);
 				l1 = getLabel(); //Endif
-				fprintf(stdout, "JZ R%d, L%d\n", r1, l1);	
+				fprintf(fp, "JZ R%d, L%d\n", r1, l1);	
 				codeGen(t->right);
-				fprintf(stdout, "L%d:\n", l1);
+				fprintf(fp, "L%d:\n", l1);
 			}
 			freeReg();
 			return VOID;
@@ -241,77 +243,77 @@ int codeGen(struct Tnode* t)
 		case WHILE:
 			l1 = getLabel(); //start
 			l2 = getLabel(); //end
-			fprintf(stdout, "L%d:\n",l1);
+			fprintf(fp, "L%d:\n",l1);
 			r1 = codeGen(t->left);
-			fprintf(stdout, "JZ R%d, L%d\n", r1, l2);
+			fprintf(fp, "JZ R%d, L%d\n", r1, l2);
 			codeGen(t->right);
-			fprintf(stdout, "L%d:\n", l2);
+			fprintf(fp, "L%d:\n", l2);
 			freeReg();
 			return VOID;
 			break;
 		case ARROP:
 			r1 = codeGen(t->right);
 			r2 = getReg();
-			fprintf(stdout, "MOV R%d, %d\n", r2, (Glookup(t->left->NAME) -> BINDING));
-			fprintf(stdout, "ADD R%d, R%d\n", r1, r2);
-			fprintf(stdout, "MOV R%d, [R%d]\n", r1, r1);
+			fprintf(fp, "MOV R%d, %d\n", r2, (Glookup(t->left->NAME) -> BINDING));
+			fprintf(fp, "ADD R%d, R%d\n", r1, r2);
+			fprintf(fp, "MOV R%d, [R%d]\n", r1, r1);
 			freeReg();
 			return r1;
 			break;
 		case ASGNARR:
 			r1 = codeGen(t->left);
 			r2 = getReg();
-			fprintf(stdout, "MOV R%d, %d\n", r2, (Glookup(t->NAME) -> BINDING));
-			fprintf(stdout, "ADD R%d, R%d\n", r1, r2);
+			fprintf(fp, "MOV R%d, %d\n", r2, (Glookup(t->NAME) -> BINDING));
+			fprintf(fp, "ADD R%d, R%d\n", r1, r2);
 			r3 = codeGen(t->right);
 			
-			fprintf(stdout, "MOV [R%d], R%d\n", r1, r3);
+			fprintf(fp, "MOV [R%d], R%d\n", r1, r3);
 			freeReg();
 			freeReg();
 			return r1;
 			break;
 		case READARR:
 			r1 = getReg(); //MEM ADDR TO READ TO
-			fprintf(stdout, "MOV R%d, %d\n", r1, (Glookup(t->NAME) -> BINDING));
+			fprintf(fp, "MOV R%d, %d\n", r1, (Glookup(t->NAME) -> BINDING));
 			r2 = codeGen(t->left);
-			fprintf(stdout, "ADD R%d, R%d\n", r1, r2);
+			fprintf(fp, "ADD R%d, R%d\n", r1, r2);
 
 			for(r2=0; r2<nextFreeReg; r2++)
-				fprintf(stdout, "PUSH R%d\n", r2);
+				fprintf(fp, "PUSH R%d\n", r2);
 
 
 			//Funct Code
-			fprintf(stdout, "MOV R%d,\"Read\"\n", r2);
-			fprintf(stdout, "PUSH R%d\n", r2);
+			fprintf(fp, "MOV R%d,\"Read\"\n", r2);
+			fprintf(fp, "PUSH R%d\n", r2);
 
 			//Arg 1
-			fprintf(stdout, "MOV R%d,-1\n", r2);
-			fprintf(stdout, "PUSH R%d\n", r2);
+			fprintf(fp, "MOV R%d,-1\n", r2);
+			fprintf(fp, "PUSH R%d\n", r2);
 
 			//Arg2
-			fprintf(stdout, "MOV R%d,SP\n", r2);
-			fprintf(stdout, "SUB R%d,3\n", r2);
-			fprintf(stdout, "MOV R%d, [R%d]\n", r2, r2);
-			fprintf(stdout, "PUSH R%d\n", r2);
+			fprintf(fp, "MOV R%d,SP\n", r2);
+			fprintf(fp, "SUB R%d,3\n", r2);
+			fprintf(fp, "MOV R%d, [R%d]\n", r2, r2);
+			fprintf(fp, "PUSH R%d\n", r2);
 
 			//Arg3
-			fprintf(stdout, "PUSH R%d\n", r1);
+			fprintf(fp, "PUSH R%d\n", r1);
 
 			//Return Space
-			fprintf(stdout, "PUSH R%d\n", r2);
+			fprintf(fp, "PUSH R%d\n", r2);
 
-			fprintf(stdout, "CALL 0\n");
+			fprintf(fp, "CALL 0\n");
 
-			fprintf(stdout, "POP R%d\n", r2); //return value
-			fprintf(stdout, "POP R%d\n", r2); //Arg3
-			fprintf(stdout, "POP R%d\n", r2); //Arg2
-			fprintf(stdout, "POP R%d\n", r2); //Arg1
-			fprintf(stdout, "POP R%d\n", r2); //Runct Code
+			fprintf(fp, "POP R%d\n", r2); //return value
+			fprintf(fp, "POP R%d\n", r2); //Arg3
+			fprintf(fp, "POP R%d\n", r2); //Arg2
+			fprintf(fp, "POP R%d\n", r2); //Arg1
+			fprintf(fp, "POP R%d\n", r2); //Runct Code
 
 			freeReg(); //R2
 
 			for(r1=nextFreeReg-1; r1>=0; r1--)	//pop all pushed registers
-				fprintf(stdout, "POP R%d\n", r1);
+				fprintf(fp, "POP R%d\n", r1);
 			
 			freeReg();
 			return VOID;
