@@ -1,6 +1,6 @@
 bubbleSort.sil
 input
-out.xsm
+xsm.out
 sim
 y.tab.c
 y.tab.h
