@@ -247,6 +247,7 @@ int codeGen(struct Tnode* t)
 			r1 = codeGen(t->left);
 			fprintf(fp, "JZ R%d, L%d\n", r1, l2);
 			codeGen(t->right);
+			fprintf(fp, "JMP L%d\n", l1);
 			fprintf(fp, "L%d:\n", l2);
 			freeReg();
 			return VOID;

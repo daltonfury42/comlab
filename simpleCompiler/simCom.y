@@ -8,10 +8,12 @@
 	#include "codeGen.h"
 
 	extern FILE* yyin;
+	extern FILE* ltin;
 	FILE* fp;
 	int vartype;
 
 	int yylex();
+	int ltlex();
 	int yyerror(const char*);
 %}
 
@@ -88,9 +90,10 @@ mainBody : BEGN slist END 	{ 	fp = fopen("tmp.out", "w");
 					codeGen($2); 
 					printFooter(); 
 					fclose(fp);
-					//yyin = fopen("tmp.out", "r");
-					//fp = fopen("tmp2.out", "w");
-					//yyparse();
+					ltin = fopen("tmp.out", "r");
+					ltlex();
+					fclose(ltin);
+					fclose(fp);
 					exit(0); 
 				}
 	     ;
