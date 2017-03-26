@@ -6,8 +6,9 @@
 	#include "constants.h"
 	#include <stdlib.h>
 
-	struct Gsymbol * GST = NULL;
 %}
+
+%option yylineno
 
 %%
 
@@ -30,6 +31,9 @@
 "endwhile" 	{ return ENDWHILE; }
 "break"		{ return BREAK; }
 "continue"	{ return CONTINUE; }
+"main"		{ return MAIN; }
+"return"	{ return RETURN; }
+"void"		{ return VOID; }
 [a-zA-Z_][a-zA-Z_0-9]*	{ 	char * varName = malloc(sizeof(char)*strlen(yytext)+1);
 			strcpy(varName, yytext);
 			yylval = TreeCreate(VOID, ID, varName, 0, NULL, NULL, NULL, NULL); 

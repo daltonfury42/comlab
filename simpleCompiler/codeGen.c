@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include "y.tab.h"
 #include "constants.h"
@@ -8,8 +9,10 @@
 
 int nextFreeReg = 0;
 int labelTracker = 1;
+int funLabel = 1;
 extern int nextFreeLocation;
 extern FILE *fp;
+extern struct Gsymbol* LST;
 
 
 int getReg()
@@ -45,6 +48,8 @@ void printHeader()
 	fprintf(fp, "2056\n");
 	fprintf(fp, "0\n0\n0\n0\n0\n0\n");
 	fprintf(fp, "MOV SP, %d\n", nextFreeLocation);
+	fprintf(fp, "MOV BP, %d\n", nextFreeLocation);
+	fprintf(fp, "JMP MAIN\n");
 }
 
 void printFooter()
@@ -117,7 +122,8 @@ int codeGen(struct Tnode* t)
 			break;
 		case READ:
 			r2 = getReg();  //register to store result
-			fprintf(fp, "MOV R%d, %d\n", r2, Glookup(t->NAME)->BINDING);
+			fprintf(fp, "MOV R%d, %d\n", r2, Llookup(t->NAME)->BINDING);
+			fprintf(fp, "ADD R%d, BP\n", r2);
 
 			for(r1=0; r1<nextFreeReg; r1++)
 				fprintf(fp, "PUSH R%d\n", r1);
@@ -198,7 +204,7 @@ int codeGen(struct Tnode* t)
 			
 			freeReg();
 
-			for(r2=nextFreeReg-2; r2>=0; r2--)	//pop all pushed registers
+			for(r2=nextFreeReg-1; r2>=0; r2--)	//pop all pushed registers
 				fprintf(fp, "POP R%d\n", r2);
 
 			freeReg();
@@ -207,12 +213,18 @@ int codeGen(struct Tnode* t)
 			break;
 		case ID:
 			r1 = getReg();
-			fprintf(fp, "MOV R%d, [%d]\n", r1, Glookup(t->NAME)->BINDING);
+			fprintf(fp, "MOV R%d, %d\n", r1, Llookup(t->NAME)->BINDING);
+			fprintf(fp, "ADD R%d, BP\n", r1);
+			fprintf(fp, "MOV R%d, [R%d]\n", r1, r1);
 			return r1;
 			break;
 		case ASGN:
 			r1 = codeGen(t->left);
-			fprintf(fp, "MOV [%d], R%d\n", Glookup(t->NAME)->BINDING, r1);
+			r2 = getReg();
+			fprintf(fp, "MOV R%d, %d\n", r2, Llookup(t->NAME)->BINDING);
+			fprintf(fp, "ADD R%d, BP\n", r2);
+			fprintf(fp, "MOV [R%d], R%d\n", r2, r1);
+			freeReg();
 			freeReg();
 			return VOID;
 			break;
@@ -255,7 +267,8 @@ int codeGen(struct Tnode* t)
 		case ARROP:
 			r1 = codeGen(t->right);
 			r2 = getReg();
-			fprintf(fp, "MOV R%d, %d\n", r2, (Glookup(t->left->NAME) -> BINDING));
+			fprintf(fp, "MOV R%d, %d\n", r2, (Llookup(t->left->NAME) -> BINDING));
+			fprintf(fp, "ADD R%d, BP\n", r2);
 			fprintf(fp, "ADD R%d, R%d\n", r1, r2);
 			fprintf(fp, "MOV R%d, [R%d]\n", r1, r1);
 			freeReg();
@@ -264,7 +277,8 @@ int codeGen(struct Tnode* t)
 		case ASGNARR:
 			r1 = codeGen(t->left);
 			r2 = getReg();
-			fprintf(fp, "MOV R%d, %d\n", r2, (Glookup(t->NAME) -> BINDING));
+			fprintf(fp, "MOV R%d, %d\n", r2, (Llookup(t->NAME) -> BINDING));
+			fprintf(fp, "ADD R%d, BP\n", r2);
 			fprintf(fp, "ADD R%d, R%d\n", r1, r2);
 			r3 = codeGen(t->right);
 			
@@ -275,7 +289,8 @@ int codeGen(struct Tnode* t)
 			break;
 		case READARR:
 			r1 = getReg(); //MEM ADDR TO READ TO
-			fprintf(fp, "MOV R%d, %d\n", r1, (Glookup(t->NAME) -> BINDING));
+			fprintf(fp, "MOV R%d, %d\n", r1, (Llookup(t->NAME) -> BINDING));
+			fprintf(fp, "ADD R%d, BP\n", r1);
 			r2 = codeGen(t->left);
 			fprintf(fp, "ADD R%d, R%d\n", r1, r2);
 
@@ -318,6 +333,96 @@ int codeGen(struct Tnode* t)
 			
 			freeReg();
 			return VOID;
+			break;
+		case RETURN:
+			r1 = codeGen(t->left);
+			r2 = getReg();
+			fprintf(fp, "MOV R%d, BP\n", r2);
+			fprintf(fp, "SUB R%d, 2\n", r2);
+			fprintf(fp, "MOV [R%d], R%d\n", r2, r1);
+			freeReg();
+			freeReg();
+			return VOID;
+			break;
+
+		case FUNDEF:
+			if(strcmp(t->NAME, "main") != 0)
+			{
+				Llookup(t->NAME)->flabel = funLabel;
+				fprintf(fp, "F%d:\n", funLabel);
+				funLabel++;
+			}
+			else
+			{
+				fprintf(fp, "MAIN:\n");
+			}
+
+			//Set BP, saving old BP on stack
+			fprintf(fp, "PUSH BP\n");
+			fprintf(fp, "MOV BP, SP\n");
+
+			//SPACE for local variables in stack
+			struct Gsymbol *i = LST;
+			int size = 0;
+			while(i != NULL)
+			{
+				if(i->BINDING >= 0)
+					size++;
+				i = i->NEXT;
+			}
+			fprintf(fp, "ADD SP, %d\n", size);
+
+			//Generate code for the function
+			codeGen(t->left);
+
+			//Deallocate local variables, restore BP and return
+			if(strcmp(t->NAME, "main") != 0)
+			{
+				fprintf(fp, "SUB SP, %d\n", size);
+				fprintf(fp, "POP BP\n");
+				fprintf(fp, "RET\n");
+			}
+
+			return VOID;
+			break;
+		case FUNCALL:
+			//save machine registers
+			for(r2=0; r2<nextFreeReg; r2++)
+				fprintf(fp, "PUSH R%d\n", r2);
+
+			//Push Arguments
+			for(struct Tnode* ti = t->left; ti != NULL; ti = ti->ArgList)
+			{
+				r2 = evaluate(ti);
+				fprintf(fp, "PUSH R%d\n", r2);
+				freeReg();
+			}
+
+			//push space for return value
+			r2 = getReg();
+			fprintf(fp, "PUSH R%d\n", r2);
+			freeReg();
+
+			//CALL
+			fprintf(fp, "CALL F%d\n", Glookup(t->NAME)->flabel);
+
+			//save retrun value
+			r1 = getReg();
+			fprintf(fp, "POP R%d\n", r1);
+			
+			//POP out arguments
+			for(struct Tnode* ti = t->left; ti != NULL; ti = ti->ArgList)
+			{
+				r2 = getReg();
+				fprintf(fp, "POP R%d\n", r2);
+				freeReg();
+			}		
+			
+			//Restore machine registers
+			for(r2=nextFreeReg-2; r2>=0; r2--)
+				fprintf(fp, "POP R%d\n", r2);
+
+			return r1;
 			break;
 		default:
 			printf("Default case(%d) executed in codeGen switch.\n", t->NODETYPE);

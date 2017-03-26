@@ -1,4 +1,4 @@
-#define VOID -1001
+#define T_VOID -1001
 #define STATEMENT -1002
 #define T_INT -1003
 #define T_BOOL -1004
@@ -10,3 +10,5 @@
 #define T_INTARR -1010
 #define T_BOOLARR -1011
 #define READARR -1012
+#define FUNDEF -1013
+#define FUNCALL -1014
