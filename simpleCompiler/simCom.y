@@ -42,7 +42,6 @@ Program		: header globalDecl functDeclList main footer	{}
 
 header		: %empty	{	position = INPROTOTYPE;
 					fp = fopen("tmp.out", "w");
-	 				printHeader(); 
 					Ginstall("main", T_VOID, 0);
 				}
 
@@ -56,7 +55,9 @@ footer		: %empty	{
 					exit(0); 
 				}
 
-globalDecl	: DECL globalDeclList ENDDECL	{ position = INDEFINITION; }
+globalDecl	: DECL globalDeclList ENDDECL	{ 	position = INDEFINITION; 
+	 						printHeader(); 
+						}
 localDecl	: DECL localDeclList ENDDECL	{}
 
 
@@ -93,7 +94,7 @@ globalVarlist	: globalVarlist ',' ID 		{ Ginstall($3->NAME, vartype, 1); }
 								 	a = a->NEXT;	
 								}
 							}
-		| ID 				{}
+		| ID 				{ Ginstall($1->NAME, vartype, 1); }
 		| IDx '(' argList ')' 		{
 							int argBinding = -3;
 							struct ArgStruct* a = currentSymbol->ARGLIST;

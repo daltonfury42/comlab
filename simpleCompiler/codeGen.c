@@ -123,7 +123,8 @@ int codeGen(struct Tnode* t)
 		case READ:
 			r2 = getReg();  //register to store result
 			fprintf(fp, "MOV R%d, %d\n", r2, Llookup(t->NAME)->BINDING);
-			fprintf(fp, "ADD R%d, BP\n", r2);
+			if(Llookup(t->NAME)->BINDING < 4000)
+				fprintf(fp, "ADD R%d, BP\n", r2);
 
 			for(r1=0; r1<nextFreeReg; r1++)
 				fprintf(fp, "PUSH R%d\n", r1);
@@ -214,7 +215,8 @@ int codeGen(struct Tnode* t)
 		case ID:
 			r1 = getReg();
 			fprintf(fp, "MOV R%d, %d\n", r1, Llookup(t->NAME)->BINDING);
-			fprintf(fp, "ADD R%d, BP\n", r1);
+			if(Llookup(t->NAME)->BINDING < 4000)
+				fprintf(fp, "ADD R%d, BP\n", r1);
 			fprintf(fp, "MOV R%d, [R%d]\n", r1, r1);
 			return r1;
 			break;
@@ -222,7 +224,8 @@ int codeGen(struct Tnode* t)
 			r1 = codeGen(t->left);
 			r2 = getReg();
 			fprintf(fp, "MOV R%d, %d\n", r2, Llookup(t->NAME)->BINDING);
-			fprintf(fp, "ADD R%d, BP\n", r2);
+			if(Llookup(t->NAME)->BINDING < 4000)
+				fprintf(fp, "ADD R%d, BP\n", r2);
 			fprintf(fp, "MOV [R%d], R%d\n", r2, r1);
 			freeReg();
 			freeReg();
@@ -268,7 +271,8 @@ int codeGen(struct Tnode* t)
 			r1 = codeGen(t->right);
 			r2 = getReg();
 			fprintf(fp, "MOV R%d, %d\n", r2, (Llookup(t->left->NAME) -> BINDING));
-			fprintf(fp, "ADD R%d, BP\n", r2);
+			if(Llookup(t->left->NAME)->BINDING < 4000)
+				fprintf(fp, "ADD R%d, BP\n", r2);
 			fprintf(fp, "ADD R%d, R%d\n", r1, r2);
 			fprintf(fp, "MOV R%d, [R%d]\n", r1, r1);
 			freeReg();
@@ -278,7 +282,8 @@ int codeGen(struct Tnode* t)
 			r1 = codeGen(t->left);
 			r2 = getReg();
 			fprintf(fp, "MOV R%d, %d\n", r2, (Llookup(t->NAME) -> BINDING));
-			fprintf(fp, "ADD R%d, BP\n", r2);
+			if(Llookup(t->NAME)->BINDING < 4000)
+				fprintf(fp, "ADD R%d, BP\n", r2);
 			fprintf(fp, "ADD R%d, R%d\n", r1, r2);
 			r3 = codeGen(t->right);
 			
@@ -290,7 +295,8 @@ int codeGen(struct Tnode* t)
 		case READARR:
 			r1 = getReg(); //MEM ADDR TO READ TO
 			fprintf(fp, "MOV R%d, %d\n", r1, (Llookup(t->NAME) -> BINDING));
-			fprintf(fp, "ADD R%d, BP\n", r1);
+			if(Llookup(t->NAME)->BINDING < 4000)
+				fprintf(fp, "ADD R%d, BP\n", r1);
 			r2 = codeGen(t->left);
 			fprintf(fp, "ADD R%d, R%d\n", r1, r2);
 
