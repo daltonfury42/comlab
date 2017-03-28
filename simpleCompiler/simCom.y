@@ -65,7 +65,7 @@ globalDeclList	: globalDecl globalDeclList	{}
 	 	| globalDecl			{}
 		;
 
-localDeclList	: localDecl localDeclList	{}
+localDeclList	: localDeclList	localDecl	{}
 	 	| localDecl			{}
 		;
 
@@ -211,12 +211,16 @@ main		: type MAIN '(' ')' '{' localDeclList mainBody '}'	{
 
 body 	: BEGN slist retn END 		{ 	
        				  		$$ = TreeCreate(VOID, STATEMENT, NULL, 0, NULL, $2, $3, NULL); 
-					  	$$->right = $3;	//test	
+					  	$$->right = $3;	
 						$$->TYPE = $3->TYPE;
+					}
+	| BEGN retn END 		{ 	
+						$$ = $2;
 					}
 	;
 
-mainBody 	: BEGN slist END 		{ $$ = $2;
+mainBody 	: BEGN slist END 	{ 
+						$$ = $2;
 					}
 	;
 
