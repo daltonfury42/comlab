@@ -115,6 +115,14 @@ int codeGen(struct Tnode* t)
 			freeReg();
 			return r1;
 			break;
+		case LE:
+			r1 = codeGen(t->left);
+			r2 = codeGen(t->right);
+			fprintf(fp, "LE R%d, R%d\n", r1, r2);
+			freeReg();
+			return r1;
+			break;
+	
 		case STATEMENT:
 			//did not do break/continue handling as in exptree
 			codeGen(t->left);
@@ -161,10 +169,9 @@ int codeGen(struct Tnode* t)
 
 			freeReg();
 
-			for(r1=nextFreeReg-2; r1>=0; r1--)	//pop all pushed registers
+			for(r1=nextFreeReg-1; r1>=0; r1--)	//pop all pushed registers
 				fprintf(fp, "POP R%d\n", r1);
 
-			
 			freeReg();
 
 			return VOID;
@@ -332,10 +339,11 @@ int codeGen(struct Tnode* t)
 			fprintf(fp, "POP R%d\n", r2); //Arg1
 			fprintf(fp, "POP R%d\n", r2); //Runct Code
 
-			freeReg(); //R2
 
 			for(r1=nextFreeReg-1; r1>=0; r1--)	//pop all pushed registers
 				fprintf(fp, "POP R%d\n", r1);
+			
+			freeReg(); //R2
 			
 			freeReg();
 			return VOID;
@@ -427,6 +435,10 @@ int codeGen(struct Tnode* t)
 				fprintf(fp, "POP R%d\n", r2);
 
 			return r1;
+			break;
+		case BREAKPOINT:
+			fprintf(fp, "BRKP\n", r2);
+			return VOID;
 			break;
 		default:
 			printf("Default case(%d) executed in codeGen switch.\n", t->NODETYPE);

@@ -30,6 +30,7 @@
 "do" 		{ return DO; }
 "endwhile" 	{ return ENDWHILE; }
 "break"		{ return BREAK; }
+"breakpoint"	{ return BREAKPOINT; }
 "continue"	{ return CONTINUE; }
 "main"		{ return MAIN; }
 "return"	{ return RETURN; }
@@ -39,7 +40,7 @@
 			yylval = TreeCreate(VOID, ID, varName, 0, NULL, NULL, NULL, NULL); 
 			return ID;
 		}
-"-"?[0-9]+		{ yylval = makeLeafNode(atoi(yytext), T_INT); return NUM; }
+[0-9]+		{ yylval = makeLeafNode(atoi(yytext), T_INT); return NUM;}
 [=]		{ return ASGN; }
 "+"		{ return PLUS; }
 "*"		{ return MUL; }
@@ -47,6 +48,7 @@
 "-"		{ return SUB; }
 "=="		{ return EQ; }
 "<"		{ return LT; }
+"<="		{ return LE; }
 ">"		{ return GT; }
 [ \t\n]		{}
 .		{ return *yytext; }

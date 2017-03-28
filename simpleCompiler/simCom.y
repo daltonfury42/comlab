@@ -27,11 +27,11 @@
 	extern int yylineno;
 %}
 
-%token ID READ WRITE ASGN NEWLINE IF THEN ELSE ENDIF WHILE DO ENDWHILE LT GT EQ BEGN END BREAK CONTINUE DECL ENDDECL RETURN MAIN VOID
+%token ID READ WRITE ASGN NEWLINE IF THEN ELSE ENDIF WHILE DO ENDWHILE LT GT EQ BEGN END BREAK CONTINUE DECL ENDDECL RETURN MAIN VOID LE BREAKPOINT
 %token BOOL INT
 %token NUM BOOLEAN
 
-%nonassoc LT GT EQ
+%nonassoc LT GT EQ LE
 %left PLUS SUB
 %left MUL DIV
 %%
@@ -84,6 +84,7 @@ IDx		: ID	{ Ginstall($1->NAME, vartype, 0); currentSymbol = Glookup($1->NAME); }
 
 globalVarlist	: globalVarlist ',' ID 		{ Ginstall($3->NAME, vartype, 1); }
 	 	| globalVarlist ',' IDx '(' argList ')'{
+/*								done in a more apt location
 								int argBinding = -3;
 								struct ArgStruct* a = currentSymbol->ARGLIST;
 								while(a != NULL)
@@ -92,11 +93,11 @@ globalVarlist	: globalVarlist ',' ID 		{ Ginstall($3->NAME, vartype, 1); }
 									Llookup(a->ARGNAME)->BINDING = argBinding;
 									argBinding--;
 								 	a = a->NEXT;	
-								}
+								}*/
 							}
 		| ID 				{ Ginstall($1->NAME, vartype, 1); }
 		| IDx '(' argList ')' 		{
-							int argBinding = -3;
+/*							int argBinding = -3;
 							struct ArgStruct* a = currentSymbol->ARGLIST;
 							while(a != NULL)
 							{
@@ -104,7 +105,7 @@ globalVarlist	: globalVarlist ',' ID 		{ Ginstall($3->NAME, vartype, 1); }
 								Llookup(a->ARGNAME)->BINDING = argBinding;
 								argBinding--;
 							 	a = a->NEXT;	
-							}
+							}*/
 						}
 
 		| globalVarlist ',' ID '[' NUM ']'	{ 	if($5->TYPE != T_INT)
@@ -167,6 +168,7 @@ arg		: type ID	{
 							exit(0);
 						}
 						currentArg = currentArg->NEXT;
+						Linstall($2->NAME, vartype, 1);
 					}		
 				}
 		;
@@ -190,6 +192,15 @@ typeID		: type ID 	{	currentSymbol = Glookup($2->NAME);
 		;
 
 functDecl	: typeID '(' argList ')' '{' localDeclList body '}'	{
+										int argBinding = -3;
+										struct ArgStruct* a = currentSymbol->ARGLIST;
+										while(a != NULL)
+										{
+											Llookup(a->ARGNAME)->BINDING = argBinding;
+											argBinding--;
+										 	a = a->NEXT;	
+										}
+	
 										
 										if(currentSymbol->TYPE != $7->TYPE)
 										{
@@ -200,6 +211,20 @@ functDecl	: typeID '(' argList ')' '{' localDeclList body '}'	{
 										codeGen($$);
 										freeLST();
 									}
+
+functDecl	: typeID '(' argList ')' '{' body '}'	{
+										
+										if(currentSymbol->TYPE != $6->TYPE)
+										{
+											printf("Return value type does not match with the hunction header for %s\n", currentSymbol->NAME);
+											exit(0);
+										}
+										$$ = TreeCreate(VOID, FUNDEF, currentSymbol->NAME, 0, NULL, $6, NULL, NULL);
+										codeGen($$);
+										freeLST();
+									}
+
+
 
 main		: type MAIN '(' ')' '{' localDeclList mainBody '}'	{
 	  									currentSymbol = Glookup("main");
@@ -287,6 +312,14 @@ expr	: expr PLUS expr	{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
 						exit(0);
 					}
 					$$ = makeBinaryOperatorNode(LT, $2, $3, T_BOOL); 
+				}
+
+     	| expr LE expr		{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
+       					{
+						printf("type error: le");
+						exit(0);
+					}
+					$$ = makeBinaryOperatorNode(LE, $2, $3, T_BOOL); 
 				}
      	| expr GT expr		{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
 					{
@@ -454,6 +487,9 @@ stmt 	: ID '[' expr ']' ASGN expr ';'	{	if(Llookup($1->NAME) == NULL)
 				  $$ = TreeCreate(VOID, CONTINUE, NULL, 0, NULL, NULL, NULL, NULL);
 				}
 	| expr ';'		{ $$ = $1; }
+	| BREAKPOINT ';'	{
+				  $$ = TreeCreate(VOID, BREAKPOINT, NULL, 0, NULL, NULL, NULL, NULL);
+				}
      	;
 
 
