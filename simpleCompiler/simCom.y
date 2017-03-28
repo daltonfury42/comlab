@@ -181,25 +181,29 @@ typeID		: type ID 	{	currentSymbol = Glookup($2->NAME);
 						exit(0);
 					}
 					currentArg = currentSymbol->ARGLIST;
+					if(vartype != currentSymbol->TYPE)
+					{
+						printf("Type error: mismatch in return value of %s.\n", $2->NAME);
+						exit(0);
+					}
 				}
 		;
 
 functDecl	: typeID '(' argList ')' '{' localDeclList body '}'	{
-										if(vartype != currentSymbol->TYPE)
+										
+										if(currentSymbol->TYPE != $7->TYPE)
 										{
-											printf("Type error: mismatch is return value of %s.\n", $2->NAME);
+											printf("Return value type does not match with the hunction header for %s\n", currentSymbol->NAME);
 											exit(0);
 										}
-										
 										$$ = TreeCreate(VOID, FUNDEF, currentSymbol->NAME, 0, NULL, $7, NULL, NULL);
-																				codeGen($$);
+										codeGen($$);
 										freeLST();
 									}
 
 main		: type MAIN '(' ')' '{' localDeclList mainBody '}'	{
 	  									currentSymbol = Glookup("main");
 										currentArg = currentSymbol->ARGLIST;
-										
 										$$ = TreeCreate(VOID, FUNDEF, "main", 0, NULL, $7, NULL, NULL);
 										codeGen($$);
 										freeLST();
@@ -208,6 +212,7 @@ main		: type MAIN '(' ')' '{' localDeclList mainBody '}'	{
 body 	: BEGN slist retn END 		{ 	
        				  		$$ = TreeCreate(VOID, STATEMENT, NULL, 0, NULL, $2, $3, NULL); 
 					  	$$->right = $3;	//test	
+						$$->TYPE = $3->TYPE;
 					}
 	;
 
@@ -215,7 +220,9 @@ mainBody 	: BEGN slist END 		{ $$ = $2;
 					}
 	;
 
-retn	: RETURN expr ';' 	{ $$ = TreeCreate(VOID, RETURN, NULL, 0, NULL, $2, NULL, NULL); }
+retn	: RETURN expr ';' 	{ $$ = TreeCreate(VOID, RETURN, NULL, 0, NULL, $2, NULL, NULL); 
+				  $$->TYPE = $2->TYPE;
+				}
 	;
 
 slist 	: slist stmt		{ 	if($1->TYPE != VOID || $2->TYPE != VOID)
