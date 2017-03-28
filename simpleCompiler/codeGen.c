@@ -397,11 +397,13 @@ int codeGen(struct Tnode* t)
 				fprintf(fp, "PUSH R%d\n", r2);
 
 			//Push Arguments
+			int argCount = 0;
 			for(struct Tnode* ti = t->left; ti != NULL; ti = ti->ArgList)
 			{
 				r2 = evaluate(ti);
 				fprintf(fp, "PUSH R%d\n", r2);
 				freeReg();
+				argCount ++;
 			}
 
 			//push space for return value
@@ -417,12 +419,8 @@ int codeGen(struct Tnode* t)
 			fprintf(fp, "POP R%d\n", r1);
 			
 			//POP out arguments
-			for(struct Tnode* ti = t->left; ti != NULL; ti = ti->ArgList)
-			{
-				r2 = getReg();
-				fprintf(fp, "POP R%d\n", r2);
-				freeReg();
-			}		
+			fprintf(fp, "SUB SP, %d\n", argCount);
+
 			
 			//Restore machine registers
 			for(r2=nextFreeReg-2; r2>=0; r2--)
