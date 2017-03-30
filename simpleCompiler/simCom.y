@@ -368,7 +368,7 @@ expr	: expr PLUS expr	{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
 						$$ = TreeCreate(Llookup($1->NAME)->TYPE, FUNCALL, $1->NAME, 0, NULL, $3, NULL, NULL);
 						}
 	;
-formalParamList	: expr ',' formalParamList 	{ $3->ArgList = $1; 
+formalParamList	: formalParamList ',' expr { $3->ArgList = $1; 
 						  $$ = $3;
 						}
 		| expr				{ $$ = $1; }
