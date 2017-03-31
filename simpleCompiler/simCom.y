@@ -427,8 +427,6 @@ stmt 	: ID '[' expr ']' ASGN expr ';'	{	if(Llookup($1->NAME) == NULL)
 					}   
 					
 				  $$ = TreeCreate(VOID, IF, NULL, 0, NULL, $3, $6, NULL);
-				  struct Tnode* tmo = $$;
-				  printf(":P");
 				}
 	| IF '(' expr ')' THEN slist ELSE slist ENDIF ';'
 				{
