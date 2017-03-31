@@ -83,30 +83,9 @@ type		: INT			{ vartype = T_INT; }
 IDx		: ID	{ Ginstall($1->NAME, vartype, 0); currentSymbol = Glookup($1->NAME); }
 
 globalVarlist	: globalVarlist ',' ID 		{ Ginstall($3->NAME, vartype, 1); }
-	 	| globalVarlist ',' IDx '(' argList ')'{
-/*								done in a more apt location
-								int argBinding = -3;
-								struct ArgStruct* a = currentSymbol->ARGLIST;
-								while(a != NULL)
-								{
-									Linstall(a->ARGNAME, a->TYPE, 1);
-									Llookup(a->ARGNAME)->BINDING = argBinding;
-									argBinding--;
-								 	a = a->NEXT;	
-								}*/
-							}
+	 	| globalVarlist ',' IDx '(' argList ')'{}
 		| ID 				{ Ginstall($1->NAME, vartype, 1); }
-		| IDx '(' argList ')' 		{
-/*							int argBinding = -3;
-							struct ArgStruct* a = currentSymbol->ARGLIST;
-							while(a != NULL)
-							{
-								Linstall(a->ARGNAME, a->TYPE, 1);
-								Llookup(a->ARGNAME)->BINDING = argBinding;
-								argBinding--;
-							 	a = a->NEXT;	
-							}*/
-						}
+		| IDx '(' argList ')' 		{}
 
 		| globalVarlist ',' ID '[' NUM ']'	{ 	if($5->TYPE != T_INT)
 							{
@@ -168,7 +147,7 @@ arg		: type ID	{
 							exit(0);
 						}
 						currentArg = currentArg->NEXT;
-						Linstall($2->NAME, vartype, 1);
+						Linstall($2->NAME, vartype, 0);
 					}		
 				}
 		;
@@ -191,7 +170,7 @@ typeID		: type ID 	{	currentSymbol = Glookup($2->NAME);
 				}
 		;
 
-functDecl	: typeID '(' argList ')' '{' localDeclList body '}'	{
+functDecl	: typeID '(' argList ')' '{' localDecl body '}'	{
 										int argBinding = -3;
 										struct ArgStruct* a = currentSymbol->ARGLIST;
 										while(a != NULL)
@@ -311,7 +290,7 @@ expr	: expr PLUS expr	{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
 						printf("type error: lt");
 						exit(0);
 					}
-					$$ = makeBinaryOperatorNode(LT, $2, $3, T_BOOL); 
+					$$ = makeBinaryOperatorNode(LT, $1, $3, T_BOOL); 
 				}
 
      	| expr LE expr		{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
@@ -319,7 +298,7 @@ expr	: expr PLUS expr	{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
 						printf("type error: le");
 						exit(0);
 					}
-					$$ = makeBinaryOperatorNode(LE, $2, $3, T_BOOL); 
+					$$ = makeBinaryOperatorNode(LE, $1, $3, T_BOOL); 
 				}
      	| expr GT expr		{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
 					{
@@ -448,6 +427,8 @@ stmt 	: ID '[' expr ']' ASGN expr ';'	{	if(Llookup($1->NAME) == NULL)
 					}   
 					
 				  $$ = TreeCreate(VOID, IF, NULL, 0, NULL, $3, $6, NULL);
+				  struct Tnode* tmo = $$;
+				  printf(":P");
 				}
 	| IF '(' expr ')' THEN slist ELSE slist ENDIF ';'
 				{
@@ -488,7 +469,6 @@ stmt 	: ID '[' expr ']' ASGN expr ';'	{	if(Llookup($1->NAME) == NULL)
 	| CONTINUE ';'		{
 				  $$ = TreeCreate(VOID, CONTINUE, NULL, 0, NULL, NULL, NULL, NULL);
 				}
-	| expr ';'		{ $$ = $1; }
 	| BREAKPOINT ';'	{
 				  $$ = TreeCreate(VOID, BREAKPOINT, NULL, 0, NULL, NULL, NULL, NULL);
 				}

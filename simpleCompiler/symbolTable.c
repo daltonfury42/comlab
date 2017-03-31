@@ -8,7 +8,7 @@
 struct Gsymbol * GST;
 struct Gsymbol * LST;
 int nextFreeLocation = 4096;
-int nextFreeBPRelativeLocation = 0;
+int nextFreeBPRelativeLocation = 1;
 
 void appendArg(struct Gsymbol* symTableEntry, char *NAME, int TYPE)
 {
@@ -122,7 +122,7 @@ void Linstall(char* NAME, int TYPE, int SIZE)
 	if (LST == NULL)
 	{
 		LST = malloc(sizeof(struct Gsymbol));
-		nextFreeBPRelativeLocation = 0;
+		nextFreeBPRelativeLocation = 1;
 		i = LST;
 	}
 	else
