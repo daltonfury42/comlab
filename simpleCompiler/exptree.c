@@ -6,7 +6,7 @@
 #include "constants.h"
 
 
-struct Tnode* makeLeafNode(int n, int TYPE){
+struct Tnode* makeLeafNode(int n, struct typeTable* TYPE){
     struct Tnode *temp;
     temp = (struct Tnode*)malloc(sizeof(struct Tnode));
     bzero(temp, sizeof(struct Tnode));
@@ -16,7 +16,7 @@ struct Tnode* makeLeafNode(int n, int TYPE){
     return temp;
 }
 
-struct Tnode* makeBinaryOperatorNode(int op, struct Tnode *l, struct Tnode *r, int TYPE){
+struct Tnode* makeBinaryOperatorNode(int op, struct Tnode *l, struct Tnode *r, struct typeTable* TYPE){
     struct Tnode *temp;
     temp = (struct Tnode*)malloc(sizeof(struct Tnode));
     bzero(temp, sizeof(struct Tnode));
@@ -26,7 +26,7 @@ struct Tnode* makeBinaryOperatorNode(int op, struct Tnode *l, struct Tnode *r, i
     temp->right = r;
     return temp;
 }
-struct Tnode *TreeCreate(int TYPE, int NODETYPE, char* NAME, int VALUE, struct Tnode* ArgList, struct Tnode* left, struct Tnode* right, struct Tnode* middle)
+struct Tnode *TreeCreate(struct typeTable* TYPE, int NODETYPE, char* NAME, int VALUE, struct Tnode* ArgList, struct Tnode* left, struct Tnode* right, struct Tnode* middle)
 {
     struct Tnode *temp;
     temp = (struct Tnode*)malloc(sizeof(struct Tnode));

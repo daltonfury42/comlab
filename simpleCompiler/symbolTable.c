@@ -10,7 +10,7 @@ struct Gsymbol * LST;
 int nextFreeLocation = 4096;
 int nextFreeBPRelativeLocation = 1;
 
-void appendArg(struct Gsymbol* symTableEntry, char *NAME, int TYPE)
+void appendArg(struct Gsymbol* symTableEntry, char *NAME, struct typeTable* TYPE)
 {
 	struct ArgStruct* i;
 	if(symTableEntry->ARGLIST == NULL)
@@ -46,7 +46,7 @@ struct Gsymbol *Glookup(char* NAME)
 	return NULL;
 }
 
-void Ginstall(char* NAME, int TYPE, int SIZE)
+void Ginstall(char* NAME, struct typeTable* TYPE, int SIZE)
 {
 	struct Gsymbol *i;
 	if(Glookup(NAME)!=NULL)
@@ -110,7 +110,7 @@ struct Gsymbol *Llookup(char* NAME)
 	return NULL;
 }
 
-void Linstall(char* NAME, int TYPE, int SIZE)
+void Linstall(char* NAME, struct typeTable* TYPE, int SIZE)
 {
 	struct Gsymbol *i;
 	if(LAloneLookup(NAME)!=NULL)

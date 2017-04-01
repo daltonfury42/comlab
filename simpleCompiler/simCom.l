@@ -3,6 +3,7 @@
 	#include "exptree.h"
 	#include "y.tab.h"
 	#include "symbolTable.h"
+	#include "typeTable.h"
 	#include "constants.h"
 	#include <stdlib.h>
 
@@ -14,8 +15,8 @@
 
 "integer" 		{ return INT; }
 "boolean"		{ return BOOL; }
-"TRUE"		{ yylval = makeLeafNode(TRUE, T_BOOL); return BOOLEAN; }
-"FALSE"		{ yylval = makeLeafNode(FALSE, T_BOOL); return BOOLEAN; }
+"TRUE"		{ yylval = makeLeafNode(TRUE, Tlookup("boolean")); return BOOLEAN; }
+"FALSE"		{ yylval = makeLeafNode(FALSE, Tlookup("boolean")); return BOOLEAN; }
 "decl"		{ return DECL; }
 "enddecl"	{ return ENDDECL; }
 "begin"		{ return BEGN; }
@@ -37,10 +38,10 @@
 "void"		{ return VOID; }
 [a-zA-Z_][a-zA-Z_0-9]*	{ 	char * varName = malloc(sizeof(char)*strlen(yytext)+1);
 			strcpy(varName, yytext);
-			yylval = TreeCreate(VOID, ID, varName, 0, NULL, NULL, NULL, NULL); 
+			yylval = TreeCreate(Tlookup("void"), ID, varName, 0, NULL, NULL, NULL, NULL); 
 			return ID;
 		}
-[0-9]+		{ yylval = makeLeafNode(atoi(yytext), T_INT); return NUM;}
+[0-9]+		{ yylval = makeLeafNode(atoi(yytext), Tlookup("integer")); return NUM;}
 [=]		{ return ASGN; }
 "+"		{ return PLUS; }
 "*"		{ return MUL; }

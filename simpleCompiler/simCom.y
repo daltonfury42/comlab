@@ -7,6 +7,7 @@
 	#include <stdio.h>	
 	#include "constants.h"
 	#include "codeGen.h"
+	#include "typeTable.h"
 
 	//for checking if function prototype and the definition header matches.
 	#define INPROTOTYPE 	8000
@@ -18,7 +19,7 @@
 	extern FILE* ltin;
 	FILE* fp;
 
-	int vartype;
+	char* vartype;
 	struct Gsymbol* currentSymbol;
 
 	int yylex();
@@ -27,7 +28,7 @@
 	extern int yylineno;
 %}
 
-%token ID READ WRITE ASGN NEWLINE IF THEN ELSE ENDIF WHILE DO ENDWHILE LT GT EQ BEGN END BREAK CONTINUE DECL ENDDECL RETURN MAIN VOID LE BREAKPOINT
+%token ID READ WRITE ASGN NEWLINE IF THEN ELSE ENDIF WHILE DO ENDWHILE LT GT EQ BEGN END BREAK CONTINUE DECL ENDDECL RETURN MAIN VOID LE BREAKPOINT TYPESTART ENDTYPE
 %token BOOL INT
 %token NUM BOOLEAN
 
@@ -35,14 +36,15 @@
 %left PLUS SUB
 %left MUL DIV
 %%
-Program		: header globalDecl functDeclList main footer	{}
-	 	| header globalDecl main footer 		{}
-	 	| header main footer		 		{}
+Program		: header typeDefBlock globalDecl functDeclList main footer	{}
+	 	| header typeDefBlock globalDecl main footer 		{}
+	 	| header typeDefBlock main footer		 		{}
 		;
 
 header		: %empty	{	position = INPROTOTYPE;
 					fp = fopen("tmp.out", "w");
-					Ginstall("main", T_VOID, 0);
+					typeTableCreate();
+					Ginstall("main", Tlookup("void"), 0);
 				}
 
 footer		: %empty	{
@@ -54,6 +56,24 @@ footer		: %empty	{
 					fclose(fp);
 					exit(0); 
 				}
+
+typeDefBlock	: TYPESTART typeDefList ENDTYPE
+		| %empty
+		;
+typeDefList	: typeDefList typeDef
+		| typeDef
+		;
+
+typeDef		: ID '{' fieldDeclList '}'	{ Tinstall($1->NAME, 0, $3); } //second argument is 'size', but made 0 for testing 
+		;
+
+fieldDeclList	: fieldDeclList fieldDecl	{ $$ = $2; ((struct fieldList*)$$)->next = $1; }
+		| fieldDecl			{ $$ = $1; }
+		;
+
+fieldDecl	: type ID ';'			{ $$ = Fcreate($2->NAME, vartype); }
+		;
+
 
 globalDecl	: DECL globalDeclList ENDDECL	{ 	position = INDEFINITION; 
 	 						printHeader(); 
@@ -75,30 +95,31 @@ globalDecl	: type globalVarlist ';'
 localDecl	: type localVarlist ';'
 		;
 
-type		: INT			{ vartype = T_INT; }
-		| BOOL 			{ vartype = T_BOOL; }
-		| VOID			{ vartype = T_VOID; }
+type		: INT			{ vartype = "integer"; }
+		| BOOL 			{ vartype = "bool"; }
+		| VOID			{ vartype = "void"; }
+		| ID			{ vartype = $1->NAME; }
 		;
 
-IDx		: ID	{ Ginstall($1->NAME, vartype, 0); currentSymbol = Glookup($1->NAME); }
+IDx		: ID	{ Ginstall($1->NAME, Tlookup(vartype), 0); currentSymbol = Glookup($1->NAME); }
 
-globalVarlist	: globalVarlist ',' ID 		{ Ginstall($3->NAME, vartype, 1); }
+globalVarlist	: globalVarlist ',' ID 		{ Ginstall($3->NAME, Tlookup(vartype), 1); }
 	 	| globalVarlist ',' IDx '(' argList ')'{}
-		| ID 				{ Ginstall($1->NAME, vartype, 1); }
+		| ID 				{ Ginstall($1->NAME, Tlookup(vartype), 1); }
 		| IDx '(' argList ')' 		{}
 
-		| globalVarlist ',' ID '[' NUM ']'	{ 	if($5->TYPE != T_INT)
+		| globalVarlist ',' ID '[' NUM ']'	{ 	if($5->TYPE != Tlookup("integer"))
 							{
 								printf("Type error in integer array declaration.\n");
 								exit(0);
 							}
-							if(vartype == T_INT)
+							if(Tlookup(vartype) == Tlookup("integer"))
 							{
-								Ginstall($3->NAME, T_INTARR, $5->VALUE); 
+								Ginstall($3->NAME, Tlookup("intarr"), $5->VALUE); 
 							}
-							else if(vartype == T_BOOL)
+							else if(Tlookup(vartype) == Tlookup("boolean"))
 							{
-								Ginstall($3->NAME, T_BOOLARR, $5->VALUE); 
+								Ginstall($3->NAME, Tlookup("boolarr"), $5->VALUE); 
 							}
 							else
 							{
@@ -106,18 +127,18 @@ globalVarlist	: globalVarlist ',' ID 		{ Ginstall($3->NAME, vartype, 1); }
 							}
 				 		}
 		| ID '[' NUM ']' 	{ 	
-						if($3->TYPE != T_INT)
+						if($3->TYPE != Tlookup("integer"))
 						{
 							printf("Type error in integer array declaration.\n");
 							exit(0);
 						}
-						if(vartype == T_INT)
+						if(Tlookup(vartype) == Tlookup("integer"))
 						{
-							Ginstall($1->NAME, T_INTARR, $3->VALUE); 
+							Ginstall($1->NAME, Tlookup("intarr"), $3->VALUE); 
 						}
-						else if(vartype == T_BOOL)
+						else if(Tlookup(vartype) == Tlookup("boolean"))
 						{
-							Ginstall($1->NAME, T_BOOLARR, $3->VALUE); 
+							Ginstall($1->NAME, Tlookup("boolarr"), $3->VALUE); 
 						}
 						else
 						{
@@ -126,8 +147,8 @@ globalVarlist	: globalVarlist ',' ID 		{ Ginstall($3->NAME, vartype, 1); }
 				 	}
 		;
 
-localVarlist	: localVarlist ',' ID 		{ Linstall($3->NAME, vartype, 1); }
-		| ID 				{ Linstall($1->NAME, vartype, 1); }
+localVarlist	: localVarlist ',' ID 		{ Linstall($3->NAME, Tlookup(vartype), 1); }
+		| ID 				{ Linstall($1->NAME, Tlookup(vartype), 1); }
 		;
 
 argList		: argList ',' arg	{
@@ -138,16 +159,16 @@ argList		: argList ',' arg	{
 
 arg		: type ID	{
      					if(position == INPROTOTYPE)	
-     						appendArg(currentSymbol, $2->NAME, vartype);
+     						appendArg(currentSymbol, $2->NAME, Tlookup(vartype));
 					else if(position == INDEFINITION)
 					{
-						if(currentArg->TYPE != vartype || strcmp(currentArg->ARGNAME, $2->NAME) != 0)
+						if(currentArg->TYPE != Tlookup(vartype) || strcmp(currentArg->ARGNAME, $2->NAME) != 0)
 						{
 							printf("Mismatch in function header.\n");
 							exit(0);
 						}
 						currentArg = currentArg->NEXT;
-						Linstall($2->NAME, vartype, 0);
+						Linstall($2->NAME, Tlookup(vartype), 0);
 					}		
 				}
 		;
@@ -162,7 +183,7 @@ typeID		: type ID 	{	currentSymbol = Glookup($2->NAME);
 						exit(0);
 					}
 					currentArg = currentSymbol->ARGLIST;
-					if(vartype != currentSymbol->TYPE)
+					if(Tlookup(vartype) != currentSymbol->TYPE)
 					{
 						printf("Type error: mismatch in return value of %s.\n", $2->NAME);
 						exit(0);
@@ -186,7 +207,7 @@ functDecl	: typeID '(' argList ')' '{' localDecl body '}'	{
 											printf("Return value type does not match with the hunction header for %s\n", currentSymbol->NAME);
 											exit(0);
 										}
-										$$ = TreeCreate(VOID, FUNDEF, currentSymbol->NAME, 0, NULL, $7, NULL, NULL);
+										$$ = TreeCreate(Tlookup("void"), FUNDEF, currentSymbol->NAME, 0, NULL, $7, NULL, NULL);
 										codeGen($$);
 										freeLST();
 									}
@@ -198,7 +219,7 @@ functDecl	: typeID '(' argList ')' '{' body '}'	{
 											printf("Return value type does not match with the hunction header for %s\n", currentSymbol->NAME);
 											exit(0);
 										}
-										$$ = TreeCreate(VOID, FUNDEF, currentSymbol->NAME, 0, NULL, $6, NULL, NULL);
+										$$ = TreeCreate(Tlookup("void"), FUNDEF, currentSymbol->NAME, 0, NULL, $6, NULL, NULL);
 										codeGen($$);
 										freeLST();
 									}
@@ -208,13 +229,13 @@ functDecl	: typeID '(' argList ')' '{' body '}'	{
 main		: type MAIN '(' ')' '{' localDeclList mainBody '}'	{
 	  									currentSymbol = Glookup("main");
 										currentArg = currentSymbol->ARGLIST;
-										$$ = TreeCreate(VOID, FUNDEF, "main", 0, NULL, $7, NULL, NULL);
+										$$ = TreeCreate(Tlookup("void"), FUNDEF, "main", 0, NULL, $7, NULL, NULL);
 										codeGen($$);
 										freeLST();
 									}
 
 body 	: BEGN slist retn END 		{ 	
-       				  		$$ = TreeCreate(VOID, STATEMENT, NULL, 0, NULL, $2, $3, NULL); 
+       				  		$$ = TreeCreate(Tlookup("void"), STATEMENT, NULL, 0, NULL, $2, $3, NULL); 
 					  	$$->right = $3;	
 						$$->TYPE = $3->TYPE;
 					}
@@ -228,19 +249,19 @@ mainBody 	: BEGN slist END 	{
 					}
 	;
 
-retn	: RETURN expr ';' 	{ $$ = TreeCreate(VOID, RETURN, NULL, 0, NULL, $2, NULL, NULL); 
+retn	: RETURN expr ';' 	{ $$ = TreeCreate(Tlookup("void"), RETURN, NULL, 0, NULL, $2, NULL, NULL); 
 				  $$->TYPE = $2->TYPE;
 				}
 	;
 
-slist 	: slist stmt		{ 	if($1->TYPE != VOID || $2->TYPE != VOID)
+slist 	: slist stmt		{ 	if($1->TYPE != Tlookup("void") || $2->TYPE != Tlookup("void"))
        					{
 						printf("type error");
 						exit(0);
 					}
-       				  	$$ = TreeCreate(VOID, STATEMENT, NULL, 0, NULL, $1, $2, NULL); 
+       				  	$$ = TreeCreate(Tlookup("void"), STATEMENT, NULL, 0, NULL, $1, $2, NULL); 
 				}
-	| stmt			{ 	if($1->TYPE != VOID)
+	| stmt			{ 	if($1->TYPE != Tlookup("void"))
        					{
 						printf("type error");
 						exit(0);
@@ -249,79 +270,79 @@ slist 	: slist stmt		{ 	if($1->TYPE != VOID || $2->TYPE != VOID)
 				}
      	;
 
-expr	: expr PLUS expr	{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
+expr	: expr PLUS expr	{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlookup("integer"))
        					{
 						printf("type error: +");
 						exit(0);
 					}
 
-     					$$ = makeBinaryOperatorNode(PLUS, $1, $3, T_INT); 
+     					$$ = makeBinaryOperatorNode(PLUS, $1, $3, Tlookup("integer")); 
      				}
-     	| expr MUL expr		{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
+     	| expr MUL expr		{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlookup("integer"))
        					{
 						printf("type error: *");
 						exit(0);
 					}
-					$$ = makeBinaryOperatorNode(MUL, $1, $3, T_INT); 
+					$$ = makeBinaryOperatorNode(MUL, $1, $3, Tlookup("integer")); 
 				}
-     	| expr SUB expr		{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
+     	| expr SUB expr		{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlookup("integer"))
        					{
 						printf("type error: SUB");
 						exit(0);
 					}
-					$$ = makeBinaryOperatorNode(SUB, $1, $3, T_INT); 
+					$$ = makeBinaryOperatorNode(SUB, $1, $3, Tlookup("integer")); 
 				}
-     	| expr DIV expr		{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
+     	| expr DIV expr		{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlookup("integer"))
        					{
 						printf("type error: DIV");
 						exit(0);
 					}
-					$$ = makeBinaryOperatorNode(DIV, $1, $3, T_INT); 
+					$$ = makeBinaryOperatorNode(DIV, $1, $3, Tlookup("integer")); 
 				}
-     	| expr EQ expr		{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
+     	| expr EQ expr		{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlookup("integer"))
        					{
 						printf("type error: eq");
 						exit(0);
 					}
-					$$ = makeBinaryOperatorNode(EQ, $1, $3, T_BOOL); 
+					$$ = makeBinaryOperatorNode(EQ, $1, $3, Tlookup("boolean")); 
 				}
-     	| expr LT expr		{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
+     	| expr LT expr		{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlookup("integer"))
        					{
 						printf("type error: lt");
 						exit(0);
 					}
-					$$ = makeBinaryOperatorNode(LT, $1, $3, T_BOOL); 
+					$$ = makeBinaryOperatorNode(LT, $1, $3, Tlookup("boolean")); 
 				}
 
-     	| expr LE expr		{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
+     	| expr LE expr		{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlookup("integer"))
        					{
 						printf("type error: le");
 						exit(0);
 					}
-					$$ = makeBinaryOperatorNode(LE, $1, $3, T_BOOL); 
+					$$ = makeBinaryOperatorNode(LE, $1, $3, Tlookup("boolean")); 
 				}
-     	| expr GT expr		{ 	if($1->TYPE != T_INT || $3->TYPE != T_INT)
+     	| expr GT expr		{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlookup("integer"))
 					{
 						printf("type error: gt");
 						exit(0);
 					}	
-					$$ = makeBinaryOperatorNode(GT, $1, $3, T_BOOL); 
+					$$ = makeBinaryOperatorNode(GT, $1, $3, Tlookup("boolean")); 
 				}
 	| '(' expr ')'		{ $$ = $2; }
 	| NUM			{ $$ = $1; }
 	| BOOLEAN 		{ $$ = $1; }
-	| ID '[' expr ']'	{ 	if($3->TYPE != T_INT)
+	| ID '[' expr ']'	{ 	if($3->TYPE != Tlookup("integer"))
        					{
 						printf("type error: [expr]");
 						exit(0);
 					}
-					if(Llookup($1->NAME)->TYPE == T_INTARR)
+					if(Llookup($1->NAME)->TYPE == Tlookup("intarr"))
 					{
-						$$ = makeBinaryOperatorNode(ARROP, $1, $4, T_INT); 
+						$$ = makeBinaryOperatorNode(ARROP, $1, $4, Tlookup("integer")); 
 					}
-					else if(Llookup($1->NAME)->TYPE == T_BOOLARR)
+					else if(Llookup($1->NAME)->TYPE == Tlookup("boolarr"))
 					{
-						$$ = makeBinaryOperatorNode(ARROP, $1, $4, T_BOOL); 
+						$$ = makeBinaryOperatorNode(ARROP, $1, $4, Tlookup("boolean")); 
 					}
 					else
 					{
@@ -364,26 +385,26 @@ stmt 	: ID ASGN expr ';'	{ 	if(Llookup($1->NAME) == NULL)
 						exit(0);
 					}
 				
-      				  	$$ = TreeCreate(VOID, ASGN, $1->NAME, 0, NULL, $3, NULL, NULL);
+      				  	$$ = TreeCreate(Tlookup("void"), ASGN, $1->NAME, 0, NULL, $3, NULL, NULL);
 				}
 stmt 	: ID '[' expr ']' ASGN expr ';'	{	if(Llookup($1->NAME) == NULL)
 						{
 							printf("3Unallocated variable %s.\n", $1->NAME);
 							exit(0);
 						}
-						if(Llookup($1->NAME)->TYPE != T_INTARR || $3->TYPE != T_INT || $6->TYPE != T_INT)
-						if(Llookup($1->NAME)->TYPE != T_BOOLARR || $3->TYPE != T_INT || $6->TYPE != T_BOOL)
+						if(Llookup($1->NAME)->TYPE != Tlookup("intarr") || $3->TYPE != Tlookup("integer") || $6->TYPE != Tlookup("integer"))
+						if(Llookup($1->NAME)->TYPE != Tlookup("boolarr") || $3->TYPE != Tlookup("integer") || $6->TYPE != Tlookup("boolean"))
        						{
 							printf("type error: []=");
 							exit(0);
 						}
-						if($3->TYPE != T_INT)
+						if($3->TYPE != Tlookup("integer"))
        						{
 							printf("type error: asgnarr[expr]");
 							exit(0);
 						}
 
-      				 	 	$$ = TreeCreate(VOID, ASGNARR, $1->NAME, 0, NULL, $3, $6, NULL);
+      				 	 	$$ = TreeCreate(Tlookup("void"), ASGNARR, $1->NAME, 0, NULL, $3, $6, NULL);
 					}
 	| READ '(' ID ')' ';' 	{ 
 				  	if(Llookup($3->NAME) == NULL)
@@ -391,10 +412,10 @@ stmt 	: ID '[' expr ']' ASGN expr ';'	{	if(Llookup($1->NAME) == NULL)
 						printf("4Unallocated variable %s.\n", $3->NAME);
 						exit(0);
 					}
-				 	$$ = TreeCreate(VOID, READ, $3->NAME, 0, NULL, NULL, NULL, NULL);
+				 	$$ = TreeCreate(Tlookup("void"), READ, $3->NAME, 0, NULL, NULL, NULL, NULL);
 				}
 	| READ '(' ID '[' expr ']' ')' ';' 	{ 
-							if($5->TYPE != T_INT)
+							if($5->TYPE != Tlookup("integer"))
        							{
 								printf("type error: readarr[expr]");
 								exit(0);
@@ -404,71 +425,71 @@ stmt 	: ID '[' expr ']' ASGN expr ';'	{	if(Llookup($1->NAME) == NULL)
 								printf("5Unallocated variable %s.\n", $3->NAME);
 								exit(0);
 							}
-							if(Llookup($3->NAME)->TYPE != T_INTARR && Llookup($3->NAME)->TYPE != T_BOOLARR)
+							if(Llookup($3->NAME)->TYPE != Tlookup("intarr") && Llookup($3->NAME)->TYPE != Tlookup("boolarr"))
        							{
 								printf("type error: READARR");
 								exit(0);
 							}
-					 	 	$$ = TreeCreate(VOID, READARR, $3->NAME, 0, NULL, $5, NULL, NULL);
+					 	 	$$ = TreeCreate(Tlookup("void"), READARR, $3->NAME, 0, NULL, $5, NULL, NULL);
 						}
-     	| WRITE '(' expr ')' ';'{ $$ = TreeCreate(VOID, WRITE, NULL, 0, NULL, $3, NULL, NULL);
+     	| WRITE '(' expr ')' ';'{ $$ = TreeCreate(Tlookup("void"), WRITE, NULL, 0, NULL, $3, NULL, NULL);
 				}
 	| IF '(' expr ')' THEN slist ENDIF ';'
 				{
-      					if($3->TYPE != T_BOOL)
+      					if($3->TYPE != Tlookup("boolean"))
        					{
 						printf("type error: IF(GUARD)");
 						exit(0);
 					}   
-      					if($6->TYPE != VOID)
+      					if($6->TYPE != Tlookup("void"))
        					{
 						printf("type error: IF(THEN)");
 						exit(0);
 					}   
 					
-				  $$ = TreeCreate(VOID, IF, NULL, 0, NULL, $3, $6, NULL);
+				  $$ = TreeCreate(Tlookup("void"), IF, NULL, 0, NULL, $3, $6, NULL);
 				}
 	| IF '(' expr ')' THEN slist ELSE slist ENDIF ';'
 				{
-      					if($3->TYPE != T_BOOL)
+      					if($3->TYPE != Tlookup("boolean"))
        					{
 						printf("type error: IF(GUARD)");
 						exit(0);
 					}   
-      					if($6->TYPE != VOID)
+      					if($6->TYPE != Tlookup("void"))
        					{
 						printf("type error: IF(THEN)");
 						exit(0);
 					}   
-      					if($8->TYPE != VOID)
+      					if($8->TYPE != Tlookup("void"))
        					{
 						printf("type error: IF(ELSE)");
 						exit(0);
 					}   
-				  $$ = TreeCreate(VOID, IF, NULL, 0, NULL, $3, $6, $8);
+				  $$ = TreeCreate(Tlookup("void"), IF, NULL, 0, NULL, $3, $6, $8);
 				}
 	| WHILE '(' expr ')' DO slist ENDWHILE ';'
 				{
-      					if($3->TYPE != T_BOOL)
+      					if($3->TYPE != Tlookup("boolean"))
        					{
 						printf("type error: WHILE(GUARD)");
 						exit(0);
 					}   
-      					if($6->TYPE != VOID)
+      					if($6->TYPE != Tlookup("void"))
        					{
 						printf("type error: WHILE(DO)");
 						exit(0);
 					}   
-				  $$ = TreeCreate(VOID, WHILE, NULL, 0, NULL, $3, $6, NULL);
+				  $$ = TreeCreate(Tlookup("void"), WHILE, NULL, 0, NULL, $3, $6, NULL);
 				}
 	| BREAK ';'		{
-				  $$ = TreeCreate(VOID, BREAK, NULL, 0, NULL, NULL, NULL, NULL);
+				  $$ = TreeCreate(Tlookup("void"), BREAK, NULL, 0, NULL, NULL, NULL, NULL);
 				}
 	| CONTINUE ';'		{
-				  $$ = TreeCreate(VOID, CONTINUE, NULL, 0, NULL, NULL, NULL, NULL);
+				  $$ = TreeCreate(Tlookup("void"), CONTINUE, NULL, 0, NULL, NULL, NULL, NULL);
 				}
 	| BREAKPOINT ';'	{
-				  $$ = TreeCreate(VOID, BREAKPOINT, NULL, 0, NULL, NULL, NULL, NULL);
+				  $$ = TreeCreate(Tlookup("void"), BREAKPOINT, NULL, 0, NULL, NULL, NULL, NULL);
 				}
      	;
 

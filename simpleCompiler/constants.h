@@ -1,14 +1,9 @@
-#define T_VOID -1001
 #define STATEMENT -1002
-#define T_INT -1003
-#define T_BOOL -1004
 #define CONSTANT -1005
 #define TRUE -1006
 #define FALSE -1007
 #define ARROP -1008
 #define ASGNARR -1009
-#define T_INTARR -1010
-#define T_BOOLARR -1011
 #define READARR -1012
 #define FUNDEF -1013
 #define FUNCALL -1014

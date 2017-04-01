@@ -4,7 +4,7 @@ struct Gsymbol {
 
 	char *NAME; // Name of the Identifier
 
-	int TYPE; // TYPE can be T_INT or T_BOOL
+	struct typeTable* TYPE; // TYPE can be T_INT or T_BOOL
 
 	/***The TYPE field must be a TypeStruct if user defined types are allowed***/
 
@@ -24,16 +24,16 @@ struct Gsymbol {
 
 struct ArgStruct {
 	char* ARGNAME;
-	int TYPE;
+	struct typeTable* TYPE;
 	struct ArgStruct *NEXT;
 };
 
-void appendArg(struct Gsymbol* symTableEntry, char *NAME, int TYPE);
+void appendArg(struct Gsymbol* symTableEntry, char *NAME, struct typeTable* TYPE);
 
 struct Gsymbol *Glookup(char *NAME); // Look up for a global identifier
 struct Gsymbol *Llookup(char *NAME); // Look up for a global identifier
 
-void Ginstall(char *NAME, int TYPE, int SIZE); // Installation
-void Linstall(char *NAME, int TYPE, int SIZE); // Installation
+void Ginstall(char *NAME, struct typeTable* TYPE, int SIZE); // Installation
+void Linstall(char *NAME, struct typeTable* TYPE, int SIZE); // Installation
 
 void freeLST();

@@ -9,7 +9,7 @@
 
 struct Tnode {
 
-	int TYPE; // Integer, Boolean or Void (for statements)
+	struct typeTable* TYPE; // Integer, Boolean or Void (for statements)
 
 	/* Must point to the type expression tree for user defined types */
 
@@ -37,13 +37,13 @@ struct Tnode {
 
 };
 
-struct Tnode *TreeCreate(int TYPE, int NODETYPE, char* NAME, int VALUE, struct Tnode* ArgList, struct Tnode* left, struct Tnode* right, struct Tnode* middle);
+struct Tnode *TreeCreate(struct typeTable* TYPE, int NODETYPE, char* NAME, int VALUE, struct Tnode* ArgList, struct Tnode* left, struct Tnode* right, struct Tnode* middle);
 
 /*Make a leaf tnode and set the value of val field*/
-struct Tnode* makeLeafNode(int n, int TYPE);
+struct Tnode* makeLeafNode(int n, struct typeTable* TYPE);
 
 /*Make a tnode with opertor, left and right branches set*/
-struct Tnode* makeBinaryOperatorNode(int op, struct Tnode *l, struct Tnode *r, int TYPE);
+struct Tnode* makeBinaryOperatorNode(int op, struct Tnode *l, struct Tnode *r, struct typeTable* TYPE);
 
 /*To evaluate an expression tree*/
 int evaluate(struct Tnode *t);
