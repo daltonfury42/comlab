@@ -64,14 +64,14 @@ typeDefList	: typeDefList typeDef
 		| typeDef
 		;
 
-typeDef		: ID '{' fieldDeclList '}'	{ Tinstall($1->NAME, 0, $3); } //second argument is 'size', but made 0 for testing 
+typeDef		: ID '{' fieldDeclList '}'	{ Tinstall($1->NAME, 0, (struct fieldList*)$3); } //second argument is 'size', but made 0 for testing 
 		;
 
-fieldDeclList	: fieldDeclList fieldDecl	{ $$ = $2; ((struct fieldList*)$$)->next = $1; }
+fieldDeclList	: fieldDeclList fieldDecl	{ $$ = $2; ((struct fieldList*)$$)->next = (struct fieldList*)$1; }
 		| fieldDecl			{ $$ = $1; }
 		;
 
-fieldDecl	: type ID ';'			{ $$ = Fcreate($2->NAME, vartype); }
+fieldDecl	: type ID ';'			{ $$ = (struct Tnode*)Fcreate($2->NAME, Tlookup(vartype)); }
 		;
 
 
