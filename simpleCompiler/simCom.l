@@ -17,6 +17,8 @@
 "boolean"		{ return BOOL; }
 "TRUE"		{ yylval = makeLeafNode(TRUE, Tlookup("boolean")); return BOOLEAN; }
 "FALSE"		{ yylval = makeLeafNode(FALSE, Tlookup("boolean")); return BOOLEAN; }
+"type"		{ return TYPESTART; }
+"endtype"		{ return ENDTYPE; }
 "decl"		{ return DECL; }
 "enddecl"	{ return ENDDECL; }
 "begin"		{ return BEGN; }
@@ -36,8 +38,7 @@
 "main"		{ return MAIN; }
 "return"	{ return RETURN; }
 "void"		{ return VOID; }
-[a-zA-Z_][a-zA-Z_0-9]*	{ 	char * varName = malloc(sizeof(char)*strlen(yytext)+1);
-			strcpy(varName, yytext);
+[a-zA-Z_][a-zA-Z_0-9]*	{ 	char * varName = strdup(yytext); //malloc(sizeof(char)*strlen(yytext)+1);
 			yylval = TreeCreate(Tlookup("void"), ID, varName, 0, NULL, NULL, NULL, NULL); 
 			return ID;
 		}

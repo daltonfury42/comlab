@@ -4,6 +4,7 @@
 #include "y.tab.h"
 #include "constants.h"
 #include "symbolTable.h"
+#include "typeTable.h"
 #include "exptree.h"
 #include "codeGen.h"
 
@@ -55,6 +56,16 @@ void printHeader()
 void printFooter()
 {
 	fprintf(fp, "INT 10\n");
+}
+
+void codeGenField(int r, struct Tnode* t)
+{
+	if(t->left == NULL)
+		return;
+	
+	fprintf(fp, "ADD R%d, %d\n", r, Flookup(t->TYPE, t->left->NAME)->fieldIndex);
+	fprintf(fp, "MOV R%d, [R%d]\n", r, r);
+	codeGenField(r, t->left);
 }
 
 int codeGen(struct Tnode* t)
@@ -220,12 +231,21 @@ int codeGen(struct Tnode* t)
 			return VOID;
 			break;
 		case ID:
-			r1 = getReg();
-			fprintf(fp, "MOV R%d, %d\n", r1, Llookup(t->NAME)->BINDING);
-			if(Llookup(t->NAME)->BINDING < 4000)
-				fprintf(fp, "ADD R%d, BP\n", r1);
-			fprintf(fp, "MOV R%d, [R%d]\n", r1, r1);
-			return r1;
+			if(t->left == NULL)
+			{
+				r1 = getReg();
+				fprintf(fp, "MOV R%d, %d\n", r1, Llookup(t->NAME)->BINDING);
+				if(Llookup(t->NAME)->BINDING < 4000)
+					fprintf(fp, "ADD R%d, BP\n", r1);
+				fprintf(fp, "MOV R%d, [R%d]\n", r1, r1);
+				return r1;
+			}
+			else
+			{
+				r1 = getReg();
+				fprintf(fp, "MOV R%d, [%d]\n", r1, Llookup(t->NAME)->BINDING);
+				codeGenField(r1, t);		//NOTE: pass t not pass t->left
+			}
 			break;
 		case ASGN:
 			r1 = codeGen(t->left);

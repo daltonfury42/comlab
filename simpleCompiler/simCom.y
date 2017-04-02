@@ -60,11 +60,12 @@ footer		: %empty	{
 typeDefBlock	: TYPESTART typeDefList ENDTYPE
 		| %empty
 		;
+
 typeDefList	: typeDefList typeDef
 		| typeDef
 		;
 
-typeDef		: ID '{' fieldDeclList '}'	{ Tinstall($1->NAME, 0, (struct fieldList*)$3); } //second argument is 'size', but made 0 for testing 
+typeDef		: ID '{' fieldDeclList '}'	{ Tinstall($1->NAME, computeFLSize((struct fieldList*)$3), (struct fieldList*)$3); } //second argument is 'size', but made 0 for testing 
 		;
 
 fieldDeclList	: fieldDeclList fieldDecl	{ $$ = $2; ((struct fieldList*)$$)->next = (struct fieldList*)$1; }
@@ -102,12 +103,12 @@ type		: INT			{ vartype = "integer"; }
 		;
 
 IDx		: ID	{ Ginstall($1->NAME, Tlookup(vartype), 0); currentSymbol = Glookup($1->NAME); }
+		;
 
 globalVarlist	: globalVarlist ',' ID 		{ Ginstall($3->NAME, Tlookup(vartype), 1); }
 	 	| globalVarlist ',' IDx '(' argList ')'{}
 		| ID 				{ Ginstall($1->NAME, Tlookup(vartype), 1); }
 		| IDx '(' argList ')' 		{}
-
 		| globalVarlist ',' ID '[' NUM ']'	{ 	if($5->TYPE != Tlookup("integer"))
 							{
 								printf("Type error in integer array declaration.\n");
@@ -367,7 +368,13 @@ expr	: expr PLUS expr	{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlooku
 						
 						$$ = TreeCreate(Llookup($1->NAME)->TYPE, FUNCALL, $1->NAME, 0, NULL, $3, NULL, NULL);
 						}
+	| field			{ $$ = $1;}
 	;
+
+field	: 	ID '.' ID	{ $$ = $1; $$->left = $3; }
+	|	ID '.' field	{ $$ = $1; $$->left = $3; }
+	;
+
 formalParamList	: formalParamList ',' expr { $3->ArgList = $1; 
 						  $$ = $3;
 						}

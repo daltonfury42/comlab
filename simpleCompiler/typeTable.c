@@ -97,13 +97,19 @@ struct fieldList* Flookup(struct typeTable *type, char *name)
 
 struct fieldList* Fcreate(char *name, struct typeTable *type)
 {
-	struct fieldList* tmp = malloc(sizeof(struct fieldList*));
+	struct fieldList* tmp = malloc(sizeof(struct fieldList));
 	tmp->name = name;
 	tmp->type = type;
 	tmp->next = NULL;
 }
 
-int getSize (struct typeTable *type)
+int computeFLSize(struct fieldList *fl)
 {
-	return type->size;	
+	int size = 0;
+	while(fl!=NULL)
+	{
+		size += fl->type->size;
+		fl = fl->next;
+	}
+	return size;	
 }

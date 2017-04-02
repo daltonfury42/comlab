@@ -17,4 +17,4 @@ struct typeTable* Tlookup(char* name);
 struct typeTable* Tinstall(char *name, int size, struct fieldList *fields);
 struct fieldList* Flookup(struct typeTable *type, char *name);
 struct fieldList* Fcreate(char *name, struct typeTable *type);
-int getSize (struct typeTable * type);
+int computeFLSize(struct fieldList* fl);
