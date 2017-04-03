@@ -38,6 +38,7 @@
 "main"		{ return MAIN; }
 "return"	{ return RETURN; }
 "void"		{ return VOID; }
+"Alloc"		{ return ALLOC; }
 [a-zA-Z_][a-zA-Z_0-9]*	{ 	char * varName = strdup(yytext); //malloc(sizeof(char)*strlen(yytext)+1);
 			yylval = TreeCreate(Tlookup("void"), ID, varName, 0, NULL, NULL, NULL, NULL); 
 			return ID;

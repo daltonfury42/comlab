@@ -3,6 +3,6 @@ if [ $? -eq 0 ]
 then
 echo "Running the simulator with comiled code:"
 cd xsm_expl/
-./xsm -e ../xsm.out
+./xsm -l lib.xsm -e ../xsm.out
 cd ..
 fi

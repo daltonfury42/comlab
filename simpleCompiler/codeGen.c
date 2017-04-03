@@ -48,8 +48,14 @@ void printHeader()
 	fprintf(fp, "0\n");
 	fprintf(fp, "2056\n");
 	fprintf(fp, "0\n0\n0\n0\n0\n0\n");
-	fprintf(fp, "MOV SP, %d\n", nextFreeLocation);
+	fprintf(fp, "MOV SP, %d\n", nextFreeLocation-1);
 	fprintf(fp, "MOV BP, %d\n", nextFreeLocation);
+	fprintf(fp, "MOV R0,-1\n" );
+	fprintf(fp, "MOV [BP],R0\n" );
+	fprintf(fp, "ADD SP,5\n" );
+	fprintf(fp, "CALL 0\n" );
+	fprintf(fp, "SUB SP,5\n" );
+	
 	fprintf(fp, "JMP MAIN\n");
 }
 
@@ -63,8 +69,9 @@ void codeGenField(int r, struct Tnode* t)
 	if(t->left == NULL)
 		return;
 	
-	fprintf(fp, "ADD R%d, %d\n", r, Flookup(t->TYPE, t->left->NAME)->fieldIndex);
-	fprintf(fp, "MOV R%d, [R%d]\n", r, r);
+	fprintf(fp, "ADD R%d, %d\n", r, Flookup(Llookup(t->NAME)->TYPE, t->left->NAME)->fieldIndex);
+	if(t->left->left != NULL)
+		fprintf(fp, "MOV R%d, [R%d]\n", r, r);
 	codeGenField(r, t->left);
 }
 
@@ -170,7 +177,7 @@ int codeGen(struct Tnode* t)
 			//Return Space
 			fprintf(fp, "PUSH R%d\n", r1);
 
-			fprintf(fp, "CALL 0\n");
+			fprintf(fp, "INT 6\n");
 
 			fprintf(fp, "POP R%d\n", r1); //return value
 			fprintf(fp, "POP R%d\n", r1); //Arg3
@@ -213,7 +220,7 @@ int codeGen(struct Tnode* t)
 			//Retrun Value
 			fprintf(fp, "PUSH R%d\n", r2);
 			
-			fprintf(fp, "CALL 0\n", r2);
+			fprintf(fp, "INT 7\n", r2);
 
 			fprintf(fp, "POP R%d\n", r1); //return value
 			fprintf(fp, "POP R%d\n", r2); //Arg3
@@ -243,8 +250,12 @@ int codeGen(struct Tnode* t)
 			else
 			{
 				r1 = getReg();
-				fprintf(fp, "MOV R%d, [%d]\n", r1, Llookup(t->NAME)->BINDING);
+				fprintf(fp, "MOV R%d, %d\n", r1, Llookup(t->NAME)->BINDING);
+				if(Llookup(t->NAME)->BINDING < 4000)
+					fprintf(fp, "ADD R%d, BP\n", r1);
+				fprintf(fp, "MOV R%d, [R%d]\n", r1, r1);
 				codeGenField(r1, t);		//NOTE: pass t not pass t->left
+				return r1;
 			}
 			break;
 		case ASGN:
@@ -351,7 +362,7 @@ int codeGen(struct Tnode* t)
 			//Return Space
 			fprintf(fp, "PUSH R%d\n", r2);
 
-			fprintf(fp, "CALL 0\n");
+			fprintf(fp, "INT 6\n");
 
 			fprintf(fp, "POP R%d\n", r2); //return value
 			fprintf(fp, "POP R%d\n", r2); //Arg3
@@ -458,6 +469,58 @@ int codeGen(struct Tnode* t)
 			break;
 		case BREAKPOINT:
 			fprintf(fp, "BRKP\n", r2);
+			return VOID;
+			break;
+		case ASGNFLD:
+			r1 = codeGen(t->left);	//reference to the field
+			r2 = codeGen(t->right); // exaluated result of expression to be assigned
+			fprintf(fp, "MOV [R%d], R%d\n", r1, r2);
+			freeReg();
+			freeReg();
+			return VOID;
+			break;
+		case EXPRFLD:
+			r1 = codeGen(t->left);	//reference to the field
+			fprintf(fp, "MOV R%d, [R%d]\n", r1, r1);
+			return r1;
+			break;
+		case ALLOC:
+			r2 = getReg();
+			for(r1=0; r1<nextFreeReg-1; r1++)		//I don't want r2 to be saved, hence -1
+				fprintf(fp, "PUSH R%d\n", r1);
+			//Funct Code
+			fprintf(fp, "MOV R%d,-2\n", r2);
+			fprintf(fp, "PUSH R%d\n", r2);
+
+			//Arg 1
+			fprintf(fp, "MOV R%d,8\n", r2);
+			fprintf(fp, "PUSH R%d\n", r2);
+
+			fprintf(fp, "ADD SP, 3\n");
+
+			fprintf(fp, "CALL 0\n");
+
+			fprintf(fp, "POP R%d\n", r2); //return value
+			fprintf(fp, "SUB SP, 4\n");
+
+			for(r1=nextFreeReg-2; r1>=0; r1--)	//-2 because I don't want r2 to be restored
+				fprintf(fp, "POP R%d\n", r1);
+		
+			if(t->left->left == NULL)
+			{
+				r1 = getReg();
+				fprintf(fp, "MOV R%d, %d\n", r1, Llookup(t->left->NAME)->BINDING);
+				if(Llookup(t->left->NAME)->BINDING < 4000)
+					fprintf(fp, "ADD R%d, BP\n", r1);
+			}
+			else
+				r1 = codeGen(t->left);	//reference to the field
+
+			fprintf(fp, "MOV [R%d], R%d\n", r1, r2);
+
+			freeReg();
+			freeReg();
+
 			return VOID;
 			break;
 		default:

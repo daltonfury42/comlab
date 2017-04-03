@@ -28,7 +28,7 @@
 	extern int yylineno;
 %}
 
-%token ID READ WRITE ASGN NEWLINE IF THEN ELSE ENDIF WHILE DO ENDWHILE LT GT EQ BEGN END BREAK CONTINUE DECL ENDDECL RETURN MAIN VOID LE BREAKPOINT TYPESTART ENDTYPE
+%token ID READ WRITE ASGN NEWLINE IF THEN ELSE ENDIF WHILE DO ENDWHILE LT GT EQ BEGN END BREAK CONTINUE DECL ENDDECL RETURN MAIN VOID LE BREAKPOINT TYPESTART ENDTYPE ALLOC
 %token BOOL INT
 %token NUM BOOLEAN
 
@@ -41,7 +41,8 @@ Program		: header typeDefBlock globalDecl functDeclList main footer	{}
 	 	| header typeDefBlock main footer		 		{}
 		;
 
-header		: %empty	{	position = INPROTOTYPE;
+header		: %empty	{	
+					position = INPROTOTYPE;
 					fp = fopen("tmp.out", "w");
 					typeTableCreate();
 					Ginstall("main", Tlookup("void"), 0);
@@ -65,11 +66,23 @@ typeDefList	: typeDefList typeDef
 		| typeDef
 		;
 
-typeDef		: ID '{' fieldDeclList '}'	{ Tinstall($1->NAME, computeFLSize((struct fieldList*)$3), (struct fieldList*)$3); } //second argument is 'size', but made 0 for testing 
+typeDef		: ID '{' fieldDeclList '}'	{ 
+							Tinstall($1->NAME, computeFLSize((struct fieldList*)$3), (struct fieldList*)$3);
+							int nextFreeField = 0;
+							struct fieldList* tmp = Tlookup($1->NAME)->fields;
+							while(tmp != NULL)
+							{
+								tmp->fieldIndex = nextFreeField;
+								nextFreeField++;
+								tmp = tmp->next;
+							}
+						}
 		;
 
 fieldDeclList	: fieldDeclList fieldDecl	{ $$ = $2; ((struct fieldList*)$$)->next = (struct fieldList*)$1; }
-		| fieldDecl			{ $$ = $1; }
+		| fieldDecl			{ 
+							$$ = $1;
+						}
 		;
 
 fieldDecl	: type ID ';'			{ $$ = (struct Tnode*)Fcreate($2->NAME, Tlookup(vartype)); }
@@ -368,7 +381,7 @@ expr	: expr PLUS expr	{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlooku
 						
 						$$ = TreeCreate(Llookup($1->NAME)->TYPE, FUNCALL, $1->NAME, 0, NULL, $3, NULL, NULL);
 						}
-	| field			{ $$ = $1;}
+	| field			{ $$ = TreeCreate(Tlookup("integer"), EXPRFLD, NULL, 0, NULL, $1, NULL, NULL);}		//todo type not set 
 	;
 
 field	: 	ID '.' ID	{ $$ = $1; $$->left = $3; }
@@ -394,7 +407,16 @@ stmt 	: ID ASGN expr ';'	{ 	if(Llookup($1->NAME) == NULL)
 				
       				  	$$ = TreeCreate(Tlookup("void"), ASGN, $1->NAME, 0, NULL, $3, NULL, NULL);
 				}
-stmt 	: ID '[' expr ']' ASGN expr ';'	{	if(Llookup($1->NAME) == NULL)
+	| field ASGN ALLOC '(' ')' ';'	{
+						$$ = TreeCreate(Tlookup("void"), ALLOC, NULL, 0, NULL, $1, NULL, NULL);
+					}
+	| ID ASGN ALLOC '(' ')' ';'	{
+						$$ = TreeCreate(Tlookup("void"), ALLOC, NULL, 0, NULL, $1, NULL, NULL);
+					}
+	| field ASGN expr ';'	{
+					$$ = TreeCreate(Tlookup("void"), ASGNFLD, NULL, 0, NULL, $1, $3, NULL);
+				}			
+	| ID '[' expr ']' ASGN expr ';'	{	if(Llookup($1->NAME) == NULL)
 						{
 							printf("3Unallocated variable %s.\n", $1->NAME);
 							exit(0);
@@ -421,6 +443,9 @@ stmt 	: ID '[' expr ']' ASGN expr ';'	{	if(Llookup($1->NAME) == NULL)
 					}
 				 	$$ = TreeCreate(Tlookup("void"), READ, $3->NAME, 0, NULL, NULL, NULL, NULL);
 				}
+	| READ '(' field ')' ';' 		{
+							$$ = TreeCreate(Tlookup("void"), READFLD, NULL, 0, NULL, $3, NULL, NULL);	
+						}
 	| READ '(' ID '[' expr ']' ')' ';' 	{ 
 							if($5->TYPE != Tlookup("integer"))
        							{
