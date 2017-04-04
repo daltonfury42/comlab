@@ -20,6 +20,7 @@
 	FILE* fp;
 
 	char* vartype;
+	struct ArgStruct* argl;
 	struct Gsymbol* currentSymbol;
 
 	int yylex();
@@ -112,7 +113,7 @@ localDecl	: type localVarlist ';'		{}
 		;
 
 type		: INT			{ vartype = "integer"; }
-		| BOOL 			{ vartype = "bool"; }
+		| BOOL 			{ vartype = "boolean"; }
 		| VOID			{ vartype = "void"; }
 		| ID			{ vartype = $1->NAME; }
 		;
@@ -404,26 +405,60 @@ expr	: expr PLUS expr	{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlooku
 					$1->TYPE = Llookup($1->NAME)->TYPE;
 				  	$$ = $1;
 				}
-	| ID '(' formalParamList ')' 	{
+	| IDz '(' formalParamList ')' 	{
 						if(Llookup($1->NAME) == NULL)
 						{
 							printf("Undefine function %s\n", $1->NAME);
 							exit(0);
 						}
+
+			/*			struct Tnode* paraml = $3;
+
+						while(argl != NULL && paraml != NULL)
+						{
+							if(argl->TYPE != paraml->TYPE && 0)
+							{
+								printf("Mismatch in type of arguments to %s()\n", $1->NAME);
+								exit(0);
+							}
+							argl = argl->NEXT;
+							paraml = paraml->left;
+						}*/
 						
 						$$ = TreeCreate(Llookup($1->NAME)->TYPE, FUNCALL, $1->NAME, 0, NULL, $3, NULL, NULL);
 						}
 	| field			{ $$ = TreeCreate(Tlookup("integer"), EXPRFLD, NULL, 0, NULL, $1, NULL, NULL);}		//todo type not set 
 	;
 
+IDz	: ID	{	
+			argl = Llookup($1->NAME)->ARGLIST;
+			$$ = $1;
+		}
+
 field	: 	ID '.' ID	{ $$ = $1; $$->left = $3; }
 	|	ID '.' field	{ $$ = $1; $$->left = $3; }
 	;
 
-formalParamList	: formalParamList ',' expr { $3->ArgList = $1; 
-						  $$ = $3;
+formalParamList	: formalParamList ',' expr 	{ 	$3->ArgList = $1; 
+						  	$$ = $3;
+							struct Tnode* gdb = $$;
+							if($3->TYPE != argl->TYPE)
+							{
+								printf("1Mismatch in type of arguments to function.\n");
+								exit(0);
+							}
+							argl = argl->NEXT;
 						}
-		| expr				{ $$ = $1; }
+		| expr				{ 	$$ = $1; 
+							struct Tnode* gdb = $$;
+							if($$->TYPE != argl->TYPE)
+							{
+								printf("2Mismatch in type of arguments to function.\n");
+								exit(0);
+							}
+							argl = argl->NEXT;
+
+						}
 		| %empty			{ $$ = NULL; }
 
 stmt 	: ID ASGN expr ';'	{ 	if(Llookup($1->NAME) == NULL)
