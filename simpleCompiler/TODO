@@ -9,5 +9,5 @@ why is codegeninit called in a stange way? @kumar
 implement free
 codeden ReadFLD
 check typecheck for * ASGN NULLC; check not covered in tests.
-typecheck overrridden for funcall arg typecheck
+typecheck overrridden in many places. search for "&& 0"
 

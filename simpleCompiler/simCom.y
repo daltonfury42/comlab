@@ -353,7 +353,7 @@ expr	: expr PLUS expr	{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlooku
 					$$ = makeBinaryOperatorNode(NEQ, $1, makeLeafNode(-1, Tlookup("integer")), Tlookup("boolean")); 
 				}
  
-     	| expr LT expr		{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlookup("integer"))
+     	| expr LT expr		{ 	if($1->TYPE == $3->TYPE)
        					{
 						printf("type error: lt");
 						exit(0);
@@ -368,7 +368,7 @@ expr	: expr PLUS expr	{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlooku
 					}
 					$$ = makeBinaryOperatorNode(LE, $1, $3, Tlookup("boolean")); 
 				}
-     	| expr GT expr		{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlookup("integer"))
+     	| expr GT expr		{ 	if($1->TYPE != $3->TYPE && 0)
 					{
 						printf("type error: gt");
 						exit(0);
@@ -414,7 +414,7 @@ expr	: expr PLUS expr	{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlooku
 
 						$$ = TreeCreate(Llookup($1->NAME)->TYPE, FUNCALL, $1->NAME, 0, NULL, $3, NULL, NULL);
 						}
-	| field			{ $$ = TreeCreate(Tlookup("integer"), EXPRFLD, NULL, 0, NULL, $1, NULL, NULL);}		//todo type not set 
+	| field			{ $$ = TreeCreate($1->TYPE, EXPRFLD, NULL, 0, NULL, $1, NULL, NULL);}		 
 	;
 
 IDz	: ID	{	
