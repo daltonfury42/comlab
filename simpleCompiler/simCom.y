@@ -229,6 +229,14 @@ functDecl	: typeID '(' argList ')' '{' localDecl body '}'	{
 									}
 
 functDecl	: typeID '(' argList ')' '{' body '}'	{
+										int argBinding = -3;
+										struct ArgStruct* a = currentSymbol->ARGLIST;
+										while(a != NULL)
+										{
+											Llookup(a->ARGNAME)->BINDING = argBinding;
+											argBinding--;
+										 	a = a->NEXT;	
+										}
 										
 										if(currentSymbol->TYPE != $6->TYPE)
 										{
