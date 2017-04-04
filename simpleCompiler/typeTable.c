@@ -101,6 +101,7 @@ struct fieldList* Fcreate(char *name, struct typeTable *type)
 	tmp->name = name;
 	tmp->type = type;
 	tmp->next = NULL;
+	return tmp;
 }
 
 int computeFLSize(struct fieldList *fl)

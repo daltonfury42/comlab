@@ -17,6 +17,7 @@
 "boolean"		{ return BOOL; }
 "TRUE"		{ yylval = makeLeafNode(TRUE, Tlookup("boolean")); return BOOLEAN; }
 "FALSE"		{ yylval = makeLeafNode(FALSE, Tlookup("boolean")); return BOOLEAN; }
+"null"		{ yylval = makeLeafNode(NULLC, Tlookup("null")); return NULLC; }
 "type"		{ return TYPESTART; }
 "endtype"		{ return ENDTYPE; }
 "decl"		{ return DECL; }
@@ -52,6 +53,7 @@
 "=="		{ return EQ; }
 "<"		{ return LT; }
 "<="		{ return LE; }
+"!="		{ return NEQ;}
 ">"		{ return GT; }
 [ \t\n]		{}
 .		{ return *yytext; }

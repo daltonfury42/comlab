@@ -10,4 +10,3 @@
 #define ASGNFLD -1015
 #define READFLD -1016
 #define EXPRFLD -1017
-#define NULLC -1018

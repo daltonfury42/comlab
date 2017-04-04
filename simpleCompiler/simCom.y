@@ -28,11 +28,11 @@
 	extern int yylineno;
 %}
 
-%token ID READ WRITE ASGN NEWLINE IF THEN ELSE ENDIF WHILE DO ENDWHILE LT GT EQ BEGN END BREAK CONTINUE DECL ENDDECL RETURN MAIN VOID LE BREAKPOINT TYPESTART ENDTYPE ALLOC
+%token ID READ WRITE ASGN NEWLINE IF THEN ELSE ENDIF WHILE DO ENDWHILE LT GT EQ BEGN END BREAK CONTINUE DECL ENDDECL RETURN MAIN VOID LE BREAKPOINT TYPESTART ENDTYPE ALLOC NULLC NEQ
 %token BOOL INT
 %token NUM BOOLEAN
 
-%nonassoc LT GT EQ LE
+%nonassoc LT GT EQ LE NEQ
 %left PLUS SUB
 %left MUL DIV
 %%
@@ -66,8 +66,9 @@ typeDefList	: typeDefList typeDef
 		| typeDef
 		;
 
-typeDef		: ID '{' fieldDeclList '}'	{ 
-							Tinstall($1->NAME, computeFLSize((struct fieldList*)$3), (struct fieldList*)$3);
+typeDef		: IDy '{' fieldDeclList '}'	{ 
+							Tlookup($1->NAME)->size = computeFLSize((struct fieldList*)$3);
+							Tlookup($1->NAME)->fields = (struct fieldList*)$3;
 							int nextFreeField = 0;
 							struct fieldList* tmp = Tlookup($1->NAME)->fields;
 							while(tmp != NULL)
@@ -78,6 +79,7 @@ typeDef		: ID '{' fieldDeclList '}'	{
 							}
 						}
 		;
+IDy		: ID 	{ Tinstall($1->NAME, 0, NULL); }
 
 fieldDeclList	: fieldDeclList fieldDecl	{ $$ = $2; ((struct fieldList*)$$)->next = (struct fieldList*)$1; }
 		| fieldDecl			{ 
@@ -103,10 +105,10 @@ localDeclList	: localDeclList	localDecl	{}
 	 	| localDecl			{}
 		;
 
-globalDecl	: type globalVarlist ';'
+globalDecl	: type globalVarlist ';'	{}
 		;
 
-localDecl	: type localVarlist ';'
+localDecl	: type localVarlist ';'		{}
 		;
 
 type		: INT			{ vartype = "integer"; }
@@ -320,6 +322,28 @@ expr	: expr PLUS expr	{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlooku
 					}
 					$$ = makeBinaryOperatorNode(EQ, $1, $3, Tlookup("boolean")); 
 				}
+     	| expr EQ NULLC 	{ 	if($1->TYPE == Tlookup("integer") || $1->TYPE == Tlookup("boolean") || $1->TYPE == Tlookup("void"))
+       					{
+						printf("type error: eq(nv)");
+						exit(0);
+					}
+					$$ = makeBinaryOperatorNode(EQ, $1, makeLeafNode(-1, Tlookup("integer")), Tlookup("boolean")); 
+				}
+     	| expr NEQ expr		{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlookup("integer"))
+       					{
+						printf("type error: eq");
+						exit(0);
+					}
+					$$ = makeBinaryOperatorNode(NEQ, $1, $3, Tlookup("boolean")); 
+				}
+      	| expr NEQ NULLC 	{ 	if($1->TYPE == Tlookup("integer") || $1->TYPE == Tlookup("boolean") || $1->TYPE == Tlookup("void"))
+       					{
+						printf("type error: eq(nv)");
+						exit(0);
+					}
+					$$ = makeBinaryOperatorNode(NEQ, $1, makeLeafNode(-1, Tlookup("integer")), Tlookup("boolean")); 
+				}
+ 
      	| expr LT expr		{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlookup("integer"))
        					{
 						printf("type error: lt");
@@ -399,11 +423,12 @@ stmt 	: ID ASGN expr ';'	{ 	if(Llookup($1->NAME) == NULL)
 						printf("2Unallocated variable %s.\n", $1->NAME);
 						exit(0);
 					}
+					/* uncommet and fix, type error in BST program
       					if(Llookup($1->NAME)->TYPE != $3->TYPE)
        					{
-						printf("type error: ASSG");
+						printf("type error: ASSG(%s)", $1->NAME);
 						exit(0);
-					}
+					}*/
 				
       				  	$$ = TreeCreate(Tlookup("void"), ASGN, $1->NAME, 0, NULL, $3, NULL, NULL);
 				}
@@ -523,6 +548,8 @@ stmt 	: ID ASGN expr ';'	{ 	if(Llookup($1->NAME) == NULL)
 	| BREAKPOINT ';'	{
 				  $$ = TreeCreate(Tlookup("void"), BREAKPOINT, NULL, 0, NULL, NULL, NULL, NULL);
 				}
+	| field ASGN NULLC ';'	{ $$ = TreeCreate(Tlookup("void"), NULLC, NULL, 0, NULL, $1, NULL, NULL); }
+	| ID ASGN NULLC ';'	{ $$ = TreeCreate(Tlookup("void"), NULLC, NULL, 0, NULL, $1, NULL, NULL); }
      	;
 
 

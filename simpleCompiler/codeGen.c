@@ -119,6 +119,13 @@ int codeGen(struct Tnode* t)
 			freeReg();
 			return r1;
 			break;
+		case NEQ:
+			r1 = codeGen(t->left);
+			r2 = codeGen(t->right);
+			fprintf(fp, "NE R%d, R%d\n", r1, r2);
+			freeReg();
+			return r1;
+			break;
 		case GT:
 			r1 = codeGen(t->left);
 			r2 = codeGen(t->right);
@@ -522,6 +529,30 @@ int codeGen(struct Tnode* t)
 			freeReg();
 
 			return VOID;
+			break;
+		case NULLC:
+			if (t->left != NULL) 	//(part of an asignment)
+			{
+				if (t->left->left != NULL)		//lvalue is a field 
+					r1 = codeGen(t->left);
+				else					//lvalue is a ID 
+				{
+					r1 = getReg();
+					fprintf(fp, "MOV R%d, %d\n", r1, Llookup(t->left->NAME)->BINDING);
+					if(Llookup(t->left->NAME)->BINDING < 4000)
+						fprintf(fp, "ADD R%d, BP\n", r1);
+				}
+				
+				fprintf(fp, "MOV [R%d], -1\n", r1);
+				freeReg();
+				return VOID;
+			}
+			else
+			{
+				r1 = getReg();
+				fprintf(fp, "MOV R%d, -1\n", r1);
+				return r1;
+			}
 			break;
 		default:
 			printf("Default case(%d) executed in codeGen switch.\n", t->NODETYPE);
