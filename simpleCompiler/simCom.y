@@ -27,6 +27,26 @@
 	int ltlex();
 	int yyerror(const char*);
 	extern int yylineno;
+
+	struct typeTable* findFinalType(struct typeTable* type, struct Tnode *t)
+	{
+		struct fieldList* temp=type->fields;
+		while(temp!=NULL){
+			if(strcmp(temp->name,t->NAME)==0)
+				break;
+			temp=temp->next;
+		}
+		if(temp==NULL){
+			printf("%s field not found %s\n",t->NAME,type->name );
+			exit(-1);
+		}
+		t->VALUE=temp->fieldIndex-1;
+		t->TYPE=temp->type;
+
+		if(t->left==NULL)
+			return temp->type;
+		return findFinalType(temp->type,t->left);
+	}
 %}
 
 %token ID READ WRITE ASGN NEWLINE IF THEN ELSE ENDIF WHILE DO ENDWHILE LT GT EQ BEGN END BREAK CONTINUE DECL ENDDECL RETURN MAIN VOID LE BREAKPOINT TYPESTART ENDTYPE ALLOC NULLC NEQ
@@ -353,7 +373,7 @@ expr	: expr PLUS expr	{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlooku
 					$$ = makeBinaryOperatorNode(NEQ, $1, makeLeafNode(-1, Tlookup("integer")), Tlookup("boolean")); 
 				}
  
-     	| expr LT expr		{ 	if($1->TYPE == $3->TYPE)
+     	| expr LT expr		{ 	if($1->TYPE != $3->TYPE)
        					{
 						printf("type error: lt");
 						exit(0);
@@ -411,10 +431,27 @@ expr	: expr PLUS expr	{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlooku
 							printf("Undefine function %s\n", $1->NAME);
 							exit(0);
 						}
-
+						
+	/*					argl = Llookup($1->NAME)->ARGLIST;
+						struct Tnode* param = $3;
+						while(param != NULL && argl!=NULL)
+						{
+							if(param->TYPE != argl->TYPE)	
+							{
+								printf("1Mismatch in type of arguments to function.\n");
+								exit(0);
+							}
+							argl = argl->NEXT;
+							param = param->left;
+						}
+*/
 						$$ = TreeCreate(Llookup($1->NAME)->TYPE, FUNCALL, $1->NAME, 0, NULL, $3, NULL, NULL);
 						}
-	| field			{ $$ = TreeCreate($1->TYPE, EXPRFLD, NULL, 0, NULL, $1, NULL, NULL);}		 
+	| field			{ 
+					$$ = TreeCreate(findFinalType(Llookup($1->NAME)->TYPE, $1->left) , EXPRFLD, NULL, 0, NULL, $1, NULL, NULL);
+
+					
+				}		 
 	;
 
 IDz	: ID	{	
@@ -422,8 +459,8 @@ IDz	: ID	{
 			$$ = $1;
 		}
 
-field	: 	ID '.' ID	{ $$ = $1; $$->left = $3; $$->TYPE = $3->TYPE; }
-	|	ID '.' field	{ $$ = $1; $$->left = $3; $$->TYPE = $3->TYPE; }
+field	: 	ID '.' ID	{ $$ = $1; $$->left = $3; }
+	|	ID '.' field	{ $$ = $1; $$->left = $3; }
 	;
 
 formalParamList	: formalParamList ',' expr 	{ 	$3->ArgList = $1; 
@@ -438,12 +475,15 @@ formalParamList	: formalParamList ',' expr 	{ 	$3->ArgList = $1;
 						}
 		| expr				{ 	$$ = $1; 
 							struct Tnode* gdb = $$;
-							if($$->TYPE != argl->TYPE && 0)
+							if(argl != NULL)
 							{
-								printf("2Mismatch in type of arguments to function.\n");
-								exit(0);
+								if($$->TYPE != argl->TYPE)
+								{
+									printf("2Mismatch in type of arguments to function.\n");
+									exit(0);
+								}
+								argl = argl->NEXT;
 							}
-							argl = argl->NEXT;
 
 						}
 		| %empty			{ $$ = NULL; }
