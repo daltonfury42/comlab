@@ -7,3 +7,7 @@ typechech fileds
 write/learn library code
 why is codegeninit called in a stange way? @kumar
 implement free
+codeden ReadFLD
+check typecheck for * ASGN NULLC; check not covered in tests.
+typecheck overrridden for funcall arg typecheck
+

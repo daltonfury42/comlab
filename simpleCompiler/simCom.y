@@ -422,8 +422,8 @@ IDz	: ID	{
 			$$ = $1;
 		}
 
-field	: 	ID '.' ID	{ $$ = $1; $$->left = $3; }
-	|	ID '.' field	{ $$ = $1; $$->left = $3; }
+field	: 	ID '.' ID	{ $$ = $1; $$->left = $3; $$->TYPE = $3->TYPE; }
+	|	ID '.' field	{ $$ = $1; $$->left = $3; $$->TYPE = $3->TYPE; }
 	;
 
 formalParamList	: formalParamList ',' expr 	{ 	$3->ArgList = $1; 
@@ -438,7 +438,7 @@ formalParamList	: formalParamList ',' expr 	{ 	$3->ArgList = $1;
 						}
 		| expr				{ 	$$ = $1; 
 							struct Tnode* gdb = $$;
-							if($$->TYPE != argl->TYPE)
+							if($$->TYPE != argl->TYPE && 0)
 							{
 								printf("2Mismatch in type of arguments to function.\n");
 								exit(0);
@@ -469,6 +469,11 @@ stmt 	: ID ASGN expr ';'	{ 	if(Llookup($1->NAME) == NULL)
 						$$ = TreeCreate(Tlookup("void"), ALLOC, NULL, 0, NULL, $1, NULL, NULL);
 					}
 	| field ASGN expr ';'	{
+					if(Llookup($1->NAME)->TYPE == Tlookup("integer") || Llookup($1->NAME)->TYPE == Tlookup("boolean") || Llookup($1->NAME)->TYPE == Tlookup("null") || Llookup($1->NAME)->TYPE == Tlookup("void"))
+					{
+						printf("Type error.\n");
+						exit(0);
+					}
 					$$ = TreeCreate(Tlookup("void"), ASGNFLD, NULL, 0, NULL, $1, $3, NULL);
 				}			
 	| ID '[' expr ']' ASGN expr ';'	{	if(Llookup($1->NAME) == NULL)
@@ -578,8 +583,23 @@ stmt 	: ID ASGN expr ';'	{ 	if(Llookup($1->NAME) == NULL)
 	| BREAKPOINT ';'	{
 				  $$ = TreeCreate(Tlookup("void"), BREAKPOINT, NULL, 0, NULL, NULL, NULL, NULL);
 				}
-	| field ASGN NULLC ';'	{ $$ = TreeCreate(Tlookup("void"), NULLC, NULL, 0, NULL, $1, NULL, NULL); }
-	| ID ASGN NULLC ';'	{ $$ = TreeCreate(Tlookup("void"), NULLC, NULL, 0, NULL, $1, NULL, NULL); }
+	| field ASGN NULLC ';'	{ 
+					if(Llookup($1->NAME)->TYPE == Tlookup("integer") || Llookup($1->NAME)->TYPE == Tlookup("boolean") || Llookup($1->NAME)->TYPE == Tlookup("null") || Llookup($1->NAME)->TYPE == Tlookup("void"))
+					{
+						printf("Type error.\n");
+						exit(0);
+					}
+		
+					$$ = TreeCreate(Tlookup("void"), NULLC, NULL, 0, NULL, $1, NULL, NULL); 
+				}
+	| ID ASGN NULLC ';'	{ 
+					if(Llookup($1->NAME)->TYPE == Tlookup("integer") || Llookup($1->NAME)->TYPE == Tlookup("boolean") || Llookup($1->NAME)->TYPE == Tlookup("null") || Llookup($1->NAME)->TYPE == Tlookup("void"))
+					{
+						printf("Type error.\n");
+						exit(0);
+					}
+					$$ = TreeCreate(Tlookup("void"), NULLC, NULL, 0, NULL, $1, NULL, NULL); 
+				}
      	;
 
 
