@@ -412,19 +412,6 @@ expr	: expr PLUS expr	{ 	if($1->TYPE != Tlookup("integer") || $3->TYPE != Tlooku
 							exit(0);
 						}
 
-			/*			struct Tnode* paraml = $3;
-
-						while(argl != NULL && paraml != NULL)
-						{
-							if(argl->TYPE != paraml->TYPE && 0)
-							{
-								printf("Mismatch in type of arguments to %s()\n", $1->NAME);
-								exit(0);
-							}
-							argl = argl->NEXT;
-							paraml = paraml->left;
-						}*/
-						
 						$$ = TreeCreate(Llookup($1->NAME)->TYPE, FUNCALL, $1->NAME, 0, NULL, $3, NULL, NULL);
 						}
 	| field			{ $$ = TreeCreate(Tlookup("integer"), EXPRFLD, NULL, 0, NULL, $1, NULL, NULL);}		//todo type not set 
